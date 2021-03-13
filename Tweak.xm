@@ -11,11 +11,15 @@ double keepAliveDuration;
 double positionX;
 double positionY;
 double artworkSize;
+double reachOffset;
 
 @interface SBWallpaperEffectView : UIVisualEffectView
 @end
 
 @interface SBReachabilityBackgroundView : UIView
+@end
+
+@interface SBReachabilityBackgroundViewController : UIViewController
 - (void)updateImage:(NSNotification *)notification;
 - (void)updateReachability;
 - (void)playPause;
@@ -54,7 +58,6 @@ double artworkSize;
 BOOL isPlaying() {
     return [[%c(SBMediaController) sharedInstance] isPlaying];
 }
-UIView *containerView;
 UIImageView *newImageView;
 UIImageView *newBGImageView;
 CBAutoScrollLabel *nowPlayingInfoSong;
@@ -62,14 +65,87 @@ CBAutoScrollLabel *nowPlayingInfoArtist;
 CBAutoScrollLabel *nowPlayingInfoAlbum;
 
 %group ReachPlayer
+%hook SBReachabilitySettings
+// Sets the vertical offset
+- (void)setYOffsetFactor:(double)arg1 {
+    arg1 = reachOffset;
+    %orig;
+}
+
+// Support for other devices
+- (bool)allowOnAllDevices {
+    return YES;
+}
+
+// Support for other devices
+- (void)setAllowOnAllDevices:(bool)arg1 {
+    %orig(YES);
+}
+
+%end
+
 %hook SBReachabilityManager
 -(void)_setKeepAliveTimer {
     // remove orig timer
 }
+
+// Support for other devices
++ (bool)reachabilitySupported {
+    return YES;
+}
+
+// Support for other devices
+- (bool)reachabilityEnabled {
+    return YES;
+}
+
+// Support for other devices
+- (void)setReachabilityEnabled:(bool)arg1 {
+    %orig(YES);
+}
+%end
+
+%hook SBSearchViewController
+// Support for other devices
+- (bool)reachabilitySupported {
+    return YES;
+}
+%end
+
+
+%hook SBAppSwitcherController
+// Support for other devices
+- (bool)_shouldRespondToReachability {
+    return YES;
+}
+%end
+
+%hook SBIconController
+// Support for other devices
+- (bool)_shouldRespondToReachability {
+    return YES;
+}
+%end
+
+%hook SBApplication
+// Support for other devices
+- (bool)isReachabilitySupported {
+    return YES;
+}
+
+- (void)setReachabilitySupported:(bool)arg1 {
+    %orig(YES);
+}
+%end
+
+%hook SpringBoard
+// Support for other devices
+- (void)_setReachabilitySupported:(bool)arg1 {
+    %orig(YES);
+}
 %end
 
 %hook SBReachabilityBackgroundView
-
 - (void)setChevronAlpha:(double)arg1 {
     if (enable) {
     arg1 = chevronOpacity;
@@ -77,11 +153,14 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
 }
 %orig;
 }
+%end
 
-- (void)didMoveToSuperview {
+%hook SBReachabilityBackgroundViewController
+
+- (void)viewWillAppear:(BOOL)animated {
     %orig;
     
-    SBWallpaperEffectView *topWallpaperEffectView = MSHookIvar<SBWallpaperEffectView *>(self, "_topWallpaperEffectView");
+    SBWallpaperEffectView *topWallpaperEffectView = MSHookIvar<SBWallpaperEffectView *>(((SBReachabilityBackgroundView *)self.view), "_topWallpaperEffectView");
     if (topWallpaperEffectView != nil) {
     newBGImageView = [[UIImageView alloc] initWithFrame:topWallpaperEffectView.bounds];
     newBGImageView.contentMode = UIViewContentModeScaleAspectFill;
@@ -107,7 +186,7 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
     if (enableBlur) {
         blurView.hidden = NO;
     }
-    blurView.frame = containerView.frame;
+    blurView.frame = newBGImageView.frame;
     [topWallpaperEffectView insertSubview:blurView aboveSubview:newBGImageView];
     
     blurView.translatesAutoresizingMaskIntoConstraints = false;
@@ -177,15 +256,18 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
     nowPlayingInfoSong.hidden = YES;
     nowPlayingInfoArtist.hidden = YES;
     nowPlayingInfoAlbum.hidden = YES;
-    
-    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    [notificationCenter addObserver:self selector:@selector(updateImage:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
-    [notificationCenter postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
-    
+        
+        NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+        [notificationCenter addObserver:self selector:@selector(updateImage:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
+        [notificationCenter postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
+    }
+}
+
+- (void)viewDidLayoutSubviews {
+    %orig;
     if ([[%c(SBReachabilityManager) sharedInstance] reachabilityModeActive] == YES) {
     NSTimer *updateTimer = [NSTimer scheduledTimerWithTimeInterval:keepAliveDuration target:self selector:@selector(updateReachability) userInfo:nil repeats:NO];
     [[NSRunLoop mainRunLoop] addTimer:updateTimer forMode:NSDefaultRunLoopMode];
-    }
     }
 }
 
@@ -241,19 +323,19 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
             newBGImageView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
         }
             
-            if (nowPlayingInfoSong != nil) {
+            if (songName != nil) {
             nowPlayingInfoSong.text = [NSString stringWithFormat:@"%@", songName];
             } else {
             nowPlayingInfoSong.text = @" ";
             }
             
-            if (nowPlayingInfoArtist != nil) {
+            if (artistName != nil) {
             nowPlayingInfoArtist.text = [NSString stringWithFormat:@"%@", artistName];
             } else {
             nowPlayingInfoArtist.text = @" ";
             }
               
-            if (nowPlayingInfoAlbum != nil) {
+            if (albumName != nil) {
             nowPlayingInfoAlbum.text = [NSString stringWithFormat:@"%@", albumName];
             } else {
             nowPlayingInfoAlbum.text = @" ";
@@ -314,6 +396,7 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
     [preferences registerDouble:&positionX default:90.0 forKey:@"positionX"];
     [preferences registerDouble:&positionY default:180.0 forKey:@"positionY"];
     [preferences registerDouble:&artworkSize default:160.0 forKey:@"artworkSize"];
+    [preferences registerDouble:&reachOffset default:0.4 forKey:@"reachOffset"];
     
     if (enable) {
     %init(ReachPlayer);
