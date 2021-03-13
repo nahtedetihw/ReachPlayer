@@ -195,7 +195,7 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
     [[%c(SBReachabilityManager) sharedInstance] toggleReachability];
     }
 }
-
+/*
 %new
 - (void)playPause {
     MRMediaRemoteSendCommand(kMRTogglePlayPause, nil);
@@ -216,7 +216,7 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
     NSLog(@"ReachPlayer DEBUG: %@", @"Previous");
     AudioServicesPlaySystemSound(1519);
 }
-
+*/
 %new
 - (void)updateImage:(NSNotification *)notification {
     MRMediaRemoteGetNowPlayingInfo(dispatch_get_main_queue(), ^(CFDictionaryRef result) {
