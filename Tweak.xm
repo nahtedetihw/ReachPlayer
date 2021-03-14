@@ -20,11 +20,17 @@ double reachOffset;
 @end
 
 @interface SBReachabilityBackgroundViewController : UIViewController
+- (UIColor *)getAverageColorFrom:(UIImage *)image withAlpha:(double)alpha;
+- (UIColor *)lightDarkFromColor:(UIColor*)color;
 - (void)updateImage:(NSNotification *)notification;
 - (void)updateReachability;
 - (void)playPause;
 - (void)next;
 - (void)previous;
+@end
+
+@interface UIColor (Private)
+-(BOOL)_isSimilarToColor:(id)arg1 withinPercentage:(double)arg2 ;
 @end
 
 @interface _UIBackdropView : UIView
@@ -55,6 +61,9 @@ double reachOffset;
 - (id)view;
 @end
 
+@interface SBHomeScreenSpotlightViewController : UIViewController
+@end
+
 BOOL isPlaying() {
     return [[%c(SBMediaController) sharedInstance] isPlaying];
 }
@@ -63,8 +72,24 @@ UIImageView *newBGImageView;
 CBAutoScrollLabel *nowPlayingInfoSong;
 CBAutoScrollLabel *nowPlayingInfoArtist;
 CBAutoScrollLabel *nowPlayingInfoAlbum;
+UIButton *playPauseButton;
+UIButton *nextButton;
+UIButton *previousButton;
+UIView *emptyView;
+NSTimer *updateTimer;
 
 %group ReachPlayer
+
+%hook SBSearchScrollView
+// disable Spotlight when Reachability active
+-(bool) gestureRecognizerShouldBegin:(id)arg1 {
+    if ([[%c(SBReachabilityManager) sharedInstance] reachabilityModeActive] == YES) {
+    return NO;
+    }
+    return %orig;
+}
+%end
+
 %hook SBReachabilitySettings
 // Sets the vertical offset
 - (void)setYOffsetFactor:(double)arg1 {
@@ -102,6 +127,20 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
 // Support for other devices
 - (void)setReachabilityEnabled:(bool)arg1 {
     %orig(YES);
+}
+
+- (void)_panToDeactivateReachability:(id)arg1 {
+    if (![arg1 isKindOfClass:%c(SBScreenEdgePanGestureRecognizer)]) return;
+    %orig;
+}
+
+- (_Bool)gestureRecognizerShouldBegin:(id)arg1 {
+    if ((![arg1 isKindOfClass:%c(SBScreenEdgePanGestureRecognizer)] && ![arg1 isKindOfClass:%c(SBReachabilityGestureRecognizer)])) return false;
+    return %orig;
+}
+
+- (void)_tapToDeactivateReachability:(id)arg1 {
+    //remove tap gesture
 }
 %end
 
@@ -145,6 +184,24 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
 }
 %end
 
+%hook SBReachabilityWindow
+// thanks NEPETA! put my own twist on it though (passes touches to our view)
+- (id)hitTest:(CGPoint)arg1 withEvent:(id)arg2 {
+    UIView *candidate = %orig;
+    SBWallpaperEffectView *correctView = MSHookIvar<SBWallpaperEffectView *>(((SBReachabilityBackgroundView *)self.rootViewController.view), "_topWallpaperEffectView");
+    if (arg1.y <= 0) {
+        candidate = [correctView hitTest:[correctView convertPoint:arg1 fromView:self] withEvent:arg2];
+        if (emptyView) {
+            candidate = emptyView;
+            emptyView = nil;
+        } else {
+            emptyView = candidate;
+        }
+    }
+    return candidate;
+}
+%end
+
 %hook SBReachabilityBackgroundView
 - (void)setChevronAlpha:(double)arg1 {
     if (enable) {
@@ -161,6 +218,7 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
     %orig;
     
     SBWallpaperEffectView *topWallpaperEffectView = MSHookIvar<SBWallpaperEffectView *>(((SBReachabilityBackgroundView *)self.view), "_topWallpaperEffectView");
+    
     if (topWallpaperEffectView != nil) {
     newBGImageView = [[UIImageView alloc] initWithFrame:topWallpaperEffectView.bounds];
     newBGImageView.contentMode = UIViewContentModeScaleAspectFill;
@@ -205,13 +263,17 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
     [newImageView.widthAnchor constraintEqualToConstant:artworkSize].active = true;
     [newImageView.heightAnchor constraintEqualToConstant:artworkSize].active = true;
     [newImageView.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX].active = true;
-    [newImageView.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY].active = true;
+    [newImageView.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-10].active = true;
     
     nowPlayingInfoSong = [[CBAutoScrollLabel alloc] init];
     nowPlayingInfoSong.textAlignment = NSTextAlignmentLeft;
     nowPlayingInfoSong.font = [UIFont boldSystemFontOfSize:20];
     nowPlayingInfoSong.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY-25, 150, 20);
-    nowPlayingInfoSong.textColor = [UIColor labelColor];
+    if (newImageView.image != nil) {
+        nowPlayingInfoSong.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+    } else {
+        nowPlayingInfoSong.textColor = [UIColor labelColor];
+    }
     nowPlayingInfoSong.clipsToBounds = NO;
     [topWallpaperEffectView addSubview:nowPlayingInfoSong];
     
@@ -219,14 +281,19 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
     [nowPlayingInfoSong.widthAnchor constraintEqualToConstant:150].active = true;
     [nowPlayingInfoSong.heightAnchor constraintEqualToConstant:20].active = true;
     [nowPlayingInfoSong.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
-    [nowPlayingInfoSong.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-25].active = true;
+    [nowPlayingInfoSong.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-40].active = true;
     
     
     nowPlayingInfoArtist = [[CBAutoScrollLabel alloc] init];
     nowPlayingInfoArtist.textAlignment = NSTextAlignmentLeft;
     nowPlayingInfoArtist.font = [UIFont boldSystemFontOfSize:14];
     nowPlayingInfoArtist.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 150, 20);
-    nowPlayingInfoArtist.textColor = [[UIColor labelColor] colorWithAlphaComponent:0.6];
+    nowPlayingInfoArtist.alpha = 0.6;
+    if (newImageView.image != nil) {
+        nowPlayingInfoArtist.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+    } else {
+        nowPlayingInfoArtist.textColor = [UIColor labelColor];
+    }
     nowPlayingInfoArtist.clipsToBounds = NO;
     [topWallpaperEffectView addSubview:nowPlayingInfoArtist];
     
@@ -234,14 +301,19 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
     [nowPlayingInfoArtist.widthAnchor constraintEqualToConstant:150].active = true;
     [nowPlayingInfoArtist.heightAnchor constraintEqualToConstant:20].active = true;
     [nowPlayingInfoArtist.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
-    [nowPlayingInfoArtist.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY].active = true;
+    [nowPlayingInfoArtist.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-20].active = true;
     
     
     nowPlayingInfoAlbum = [[CBAutoScrollLabel alloc] init];
     nowPlayingInfoAlbum.textAlignment = NSTextAlignmentLeft;
     nowPlayingInfoAlbum.font = [UIFont systemFontOfSize:14];
     nowPlayingInfoAlbum.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY+25, 150, 20);
-    nowPlayingInfoAlbum.textColor = [[UIColor labelColor] colorWithAlphaComponent:0.2];
+    nowPlayingInfoAlbum.alpha = 0.2;
+    if (newImageView.image != nil) {
+        nowPlayingInfoAlbum.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+    } else {
+        nowPlayingInfoAlbum.textColor = [UIColor labelColor];
+    }
     nowPlayingInfoAlbum.clipsToBounds = NO;
     [topWallpaperEffectView addSubview:nowPlayingInfoAlbum];
     
@@ -249,26 +321,95 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
     [nowPlayingInfoAlbum.widthAnchor constraintEqualToConstant:150].active = true;
     [nowPlayingInfoAlbum.heightAnchor constraintEqualToConstant:20].active = true;
     [nowPlayingInfoAlbum.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
-    [nowPlayingInfoAlbum.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+25].active = true;
+    [nowPlayingInfoAlbum.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY].active = true;
+        
+    playPauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [playPauseButton setTitle:@"" forState:UIControlStateNormal];
+    playPauseButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 30, 30);
+    if (isPlaying()) {
+        [playPauseButton setImage:[[UIImage systemImageNamed:@"pause.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    } else {
+        [playPauseButton setImage:[[UIImage systemImageNamed:@"play.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    }
+    if (newImageView.image != nil) {
+        playPauseButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+    } else {
+        playPauseButton.tintColor = [UIColor labelColor];
+    }
+    [playPauseButton addTarget:self
+                  action:@selector(playPause)
+        forControlEvents:UIControlEventTouchUpInside];
+    [topWallpaperEffectView addSubview:playPauseButton];
+        
+    playPauseButton.translatesAutoresizingMaskIntoConstraints = false;
+    [playPauseButton.widthAnchor constraintEqualToConstant:30].active = true;
+    [playPauseButton.heightAnchor constraintEqualToConstant:30].active = true;
+    [playPauseButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
+    [playPauseButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
+        
+    nextButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    nextButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 30, 30);
+    [nextButton setTitle:@"" forState:UIControlStateNormal];
+    [nextButton setImage:[[UIImage systemImageNamed:@"forward.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    if (newImageView.image != nil) {
+        nextButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+    } else {
+        nextButton.tintColor = [UIColor labelColor];
+    }
+    [nextButton addTarget:self
+                      action:@selector(next)
+            forControlEvents:UIControlEventTouchUpInside];
+    [topWallpaperEffectView addSubview:nextButton];
+        
+    nextButton.translatesAutoresizingMaskIntoConstraints = false;
+    [nextButton.widthAnchor constraintEqualToConstant:30].active = true;
+    [nextButton.heightAnchor constraintEqualToConstant:30].active = true;
+    [nextButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170+50].active = true;
+    [nextButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
+        
+    previousButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    previousButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 30, 30);
+    [previousButton setTitle:@"" forState:UIControlStateNormal];
+    [previousButton setImage:[[UIImage systemImageNamed:@"backward.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    if (newImageView.image != nil) {
+        previousButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+    } else {
+        previousButton.tintColor = [UIColor labelColor];
+    }
+    [previousButton addTarget:self
+                  action:@selector(previous)
+        forControlEvents:UIControlEventTouchUpInside];
+    [topWallpaperEffectView addSubview:previousButton];
+        
+    previousButton.translatesAutoresizingMaskIntoConstraints = false;
+    [previousButton.widthAnchor constraintEqualToConstant:30].active = true;
+    [previousButton.heightAnchor constraintEqualToConstant:30].active = true;
+    [previousButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170-50].active = true;
+    [previousButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
     
     newImageView.hidden = YES;
     newBGImageView.hidden = YES;
     nowPlayingInfoSong.hidden = YES;
     nowPlayingInfoArtist.hidden = YES;
     nowPlayingInfoAlbum.hidden = YES;
+    playPauseButton.hidden = YES;
+    nextButton.hidden = YES;
+    previousButton.hidden = YES;
         
-        NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-        [notificationCenter addObserver:self selector:@selector(updateImage:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
-        [notificationCenter postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
+    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+    [notificationCenter addObserver:self selector:@selector(updateImage:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
+    [notificationCenter postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
+        
+    if ([[%c(SBReachabilityManager) sharedInstance] reachabilityModeActive] == YES) {
+        updateTimer = [NSTimer scheduledTimerWithTimeInterval:keepAliveDuration target:self selector:@selector(updateReachability) userInfo:nil repeats:NO];
+        [[NSRunLoop mainRunLoop] addTimer:updateTimer forMode:NSDefaultRunLoopMode];
+        }
     }
 }
 
-- (void)viewDidLayoutSubviews {
+- (void)viewDidDisappear:(BOOL)animated {
     %orig;
-    if ([[%c(SBReachabilityManager) sharedInstance] reachabilityModeActive] == YES) {
-    NSTimer *updateTimer = [NSTimer scheduledTimerWithTimeInterval:keepAliveDuration target:self selector:@selector(updateReachability) userInfo:nil repeats:NO];
-    [[NSRunLoop mainRunLoop] addTimer:updateTimer forMode:NSDefaultRunLoopMode];
-    }
+    [updateTimer invalidate];
 }
 
 %new
@@ -277,11 +418,16 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
     [[%c(SBReachabilityManager) sharedInstance] toggleReachability];
     }
 }
-/*
+
 %new
 - (void)playPause {
     MRMediaRemoteSendCommand(kMRTogglePlayPause, nil);
     NSLog(@"ReachPlayer DEBUG: %@", @"PlayPause");
+    if (isPlaying()) {
+        [playPauseButton setImage:[[UIImage systemImageNamed:@"pause.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    } else {
+        [playPauseButton setImage:[[UIImage systemImageNamed:@"play.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    }
     AudioServicesPlaySystemSound(1519);
 }
 
@@ -298,7 +444,7 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
     NSLog(@"ReachPlayer DEBUG: %@", @"Previous");
     AudioServicesPlaySystemSound(1519);
 }
-*/
+
 %new
 - (void)updateImage:(NSNotification *)notification {
     MRMediaRemoteGetNowPlayingInfo(dispatch_get_main_queue(), ^(CFDictionaryRef result) {
@@ -316,11 +462,15 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
         NSData *artworkData = [dictionary objectForKey:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoArtworkData];
 
         if (artworkData != nil) {
-            newImageView.image = [UIImage imageWithData:artworkData];
-            newBGImageView.image = [UIImage imageWithData:artworkData];
+            [UIView animateWithDuration:0.3 animations:^{
+                newImageView.image = [UIImage imageWithData:artworkData];
+                newBGImageView.image = [UIImage imageWithData:artworkData];
+            }];
         } else {
-            newImageView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
-            newBGImageView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
+            [UIView animateWithDuration:0.3 animations:^{
+                newImageView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
+                newBGImageView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
+            }];
         }
             
             if (songName != nil) {
@@ -344,10 +494,25 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
             if (enableBlur) {
                 newBGImageView.hidden = NO;
             }
+            if (isPlaying()) {
+                [playPauseButton setImage:[[UIImage systemImageNamed:@"pause.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+            } else {
+                [playPauseButton setImage:[[UIImage systemImageNamed:@"play.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+            }
             newImageView.hidden = NO;
             nowPlayingInfoSong.hidden = NO;
             nowPlayingInfoArtist.hidden = NO;
             nowPlayingInfoAlbum.hidden = NO;
+            playPauseButton.hidden = NO;
+            nextButton.hidden = NO;
+            previousButton.hidden = NO;
+            
+            nowPlayingInfoSong.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+            nowPlayingInfoArtist.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+            nowPlayingInfoAlbum.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+            playPauseButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+            nextButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+            previousButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
 
         } else {
             if (enableBlur) {
@@ -357,8 +522,60 @@ CBAutoScrollLabel *nowPlayingInfoAlbum;
             nowPlayingInfoSong.hidden = YES;
             nowPlayingInfoArtist.hidden = YES;
             nowPlayingInfoAlbum.hidden = YES;
+            playPauseButton.hidden = YES;
+            nextButton.hidden = YES;
+            previousButton.hidden = YES;
+            
+            nowPlayingInfoSong.textColor = [UIColor labelColor];
+            nowPlayingInfoArtist.textColor = [UIColor labelColor];
+            nowPlayingInfoAlbum.textColor = [UIColor labelColor];
+            playPauseButton.tintColor = [UIColor labelColor];
+            nextButton.tintColor = [UIColor labelColor];
+            previousButton.tintColor = [UIColor labelColor];
         }
   });
+}
+
+%new
+- (UIColor *)getAverageColorFrom:(UIImage *)image withAlpha:(double)alpha {
+      
+    CGSize size = {1, 1};
+      UIGraphicsBeginImageContext(size);
+      CGContextRef ctx = UIGraphicsGetCurrentContext();
+      CGContextSetInterpolationQuality(ctx, kCGInterpolationMedium);
+
+      [image drawInRect:(CGRect){.size = size} blendMode:kCGBlendModeCopy alpha:1];
+
+      uint8_t *data = (uint8_t *)CGBitmapContextGetData(ctx);
+
+      UIColor *color = [UIColor colorWithRed:data[2] / 255.0f
+                                   green:data[1] / 255.0f
+                                    blue:data[0] / 255.0f
+                                   alpha:alpha];
+
+      UIGraphicsEndImageContext();
+
+      return color;
+
+}
+
+%new
+- (UIColor *)lightDarkFromColor:(UIColor*)color {
+    size_t count = CGColorGetNumberOfComponents(color.CGColor);
+    const CGFloat *componentColors = CGColorGetComponents(color.CGColor);
+
+    CGFloat darknessScore = 0;
+    if (count == 2) {
+        darknessScore = (((componentColors[0]*255) * 299) + ((componentColors[0]*255) * 587) + ((componentColors[0]*255) * 114)) / 1000;
+    } else if (count == 4) {
+        darknessScore = (((componentColors[0]*255) * 299) + ((componentColors[1]*255) * 587) + ((componentColors[2]*255) * 114)) / 1000;
+    }
+
+    if (darknessScore >= 125) {
+        return [UIColor blackColor];
+    }
+
+    return [UIColor whiteColor];
 }
 %end
 %end

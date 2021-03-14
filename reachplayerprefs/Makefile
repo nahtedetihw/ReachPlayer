@@ -2,6 +2,8 @@ ARCHS = arm64 arm64e
 
 include $(THEOS)/makefiles/common.mk
 
+PREFIX=$(THEOS)/toolchain/Xcode.xctoolchain/usr/bin/
+
 BUNDLE_NAME = reachplayerprefs
 $(BUNDLE_NAME)_FILES = REACHPLAYERPreferences.m
 $(BUNDLE_NAME)_INSTALL_PATH = /Library/PreferenceBundles
