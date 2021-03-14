@@ -275,6 +275,8 @@ NSTimer *updateTimer;
         nowPlayingInfoSong.textColor = [UIColor labelColor];
     }
     nowPlayingInfoSong.clipsToBounds = NO;
+    nowPlayingInfoSong.isAccessibilityElement = YES;
+    nowPlayingInfoSong.accessibilityHint = @"Name of the currently playing song.";
     [topWallpaperEffectView addSubview:nowPlayingInfoSong];
     
     nowPlayingInfoSong.translatesAutoresizingMaskIntoConstraints = false;
@@ -295,6 +297,8 @@ NSTimer *updateTimer;
         nowPlayingInfoArtist.textColor = [UIColor labelColor];
     }
     nowPlayingInfoArtist.clipsToBounds = NO;
+    nowPlayingInfoArtist.isAccessibilityElement = YES;
+    nowPlayingInfoArtist.accessibilityHint = @"Name of the currently playing artist.";
     [topWallpaperEffectView addSubview:nowPlayingInfoArtist];
     
     nowPlayingInfoArtist.translatesAutoresizingMaskIntoConstraints = false;
@@ -315,6 +319,8 @@ NSTimer *updateTimer;
         nowPlayingInfoAlbum.textColor = [UIColor labelColor];
     }
     nowPlayingInfoAlbum.clipsToBounds = NO;
+    nowPlayingInfoAlbum.isAccessibilityElement = YES;
+    nowPlayingInfoAlbum.accessibilityHint = @"Name of the currently playing album.";
     [topWallpaperEffectView addSubview:nowPlayingInfoAlbum];
     
     nowPlayingInfoAlbum.translatesAutoresizingMaskIntoConstraints = false;
@@ -339,6 +345,8 @@ NSTimer *updateTimer;
     [playPauseButton addTarget:self
                   action:@selector(playPause)
         forControlEvents:UIControlEventTouchUpInside];
+    playPauseButton.isAccessibilityElement = YES;
+    playPauseButton.accessibilityHint = @"Play Pause Song Button.";
     [topWallpaperEffectView addSubview:playPauseButton];
         
     playPauseButton.translatesAutoresizingMaskIntoConstraints = false;
@@ -359,6 +367,8 @@ NSTimer *updateTimer;
     [nextButton addTarget:self
                       action:@selector(next)
             forControlEvents:UIControlEventTouchUpInside];
+    nextButton.isAccessibilityElement = YES;
+    nextButton.accessibilityHint = @"Next Song Button.";
     [topWallpaperEffectView addSubview:nextButton];
         
     nextButton.translatesAutoresizingMaskIntoConstraints = false;
@@ -379,6 +389,8 @@ NSTimer *updateTimer;
     [previousButton addTarget:self
                   action:@selector(previous)
         forControlEvents:UIControlEventTouchUpInside];
+    previousButton.isAccessibilityElement = YES;
+    previousButton.accessibilityHint = @"Next Song Button.";
     [topWallpaperEffectView addSubview:previousButton];
         
     previousButton.translatesAutoresizingMaskIntoConstraints = false;
@@ -475,20 +487,26 @@ NSTimer *updateTimer;
             
             if (songName != nil) {
             nowPlayingInfoSong.text = [NSString stringWithFormat:@"%@", songName];
+            nowPlayingInfoSong.accessibilityLabel = [NSString stringWithFormat:@"%@", songName];
             } else {
             nowPlayingInfoSong.text = @" ";
+            nowPlayingInfoSong.accessibilityLabel = @" ";
             }
             
             if (artistName != nil) {
             nowPlayingInfoArtist.text = [NSString stringWithFormat:@"%@", artistName];
+            nowPlayingInfoArtist.accessibilityLabel = [NSString stringWithFormat:@"%@", songName];
             } else {
             nowPlayingInfoArtist.text = @" ";
+            nowPlayingInfoArtist.accessibilityLabel = @" ";
             }
               
             if (albumName != nil) {
             nowPlayingInfoAlbum.text = [NSString stringWithFormat:@"%@", albumName];
+            nowPlayingInfoAlbum.accessibilityLabel = [NSString stringWithFormat:@"%@", songName];
             } else {
             nowPlayingInfoAlbum.text = @" ";
+            nowPlayingInfoAlbum.accessibilityLabel = @" ";
             }
             
             if (enableBlur) {
