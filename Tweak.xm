@@ -67,6 +67,7 @@ double reachOffset;
 BOOL isPlaying() {
     return [[%c(SBMediaController) sharedInstance] isPlaying];
 }
+
 UIImageView *newImageView;
 UIImageView *newBGImageView;
 CBAutoScrollLabel *nowPlayingInfoSong;
@@ -83,6 +84,14 @@ NSTimer *updateTimer;
 %hook SBSearchScrollView
 // disable Spotlight when Reachability active
 -(bool) gestureRecognizerShouldBegin:(id)arg1 {
+    if ([[%c(SBReachabilityManager) sharedInstance] reachabilityModeActive] == YES) {
+    return NO;
+    }
+    return %orig;
+}
+
+// disable Spotlight when Reachability active
+-(BOOL)gestureRecognizer:(id)arg1 shouldRequireFailureOfGestureRecognizer:(id)arg2 {
     if ([[%c(SBReachabilityManager) sharedInstance] reachabilityModeActive] == YES) {
     return NO;
     }
@@ -111,6 +120,10 @@ NSTimer *updateTimer;
 
 %hook SBReachabilityManager
 -(void)_setKeepAliveTimer {
+    // remove orig timer
+}
+
+-(void)_pingKeepAliveWithDuration:(double)arg1 interactedBeforePing:(BOOL)arg2 initialKeepAliveTime:(double)arg3 {
     // remove orig timer
 }
 
@@ -213,7 +226,6 @@ NSTimer *updateTimer;
 %end
 
 %hook SBReachabilityBackgroundViewController
-
 - (void)viewWillAppear:(BOOL)animated {
     %orig;
     
@@ -253,13 +265,13 @@ NSTimer *updateTimer;
     [blurView.rightAnchor constraintEqualToAnchor:topWallpaperEffectView.rightAnchor constant:0].active = YES;
     [blurView.topAnchor constraintEqualToAnchor:topWallpaperEffectView.topAnchor constant:0].active = YES;
     
-    newImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0,topWallpaperEffectView.center.y-positionY,artworkSize,artworkSize)];
-    newImageView.contentMode = UIViewContentModeScaleAspectFill;
-    newImageView.layer.masksToBounds = YES;
-    newImageView.layer.cornerRadius = newImageView.frame.size.height/8;
+        newImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0,topWallpaperEffectView.center.y-positionY,artworkSize,artworkSize)];
+        newImageView.contentMode = UIViewContentModeScaleAspectFill;
+        newImageView.layer.masksToBounds = YES;
+        newImageView.layer.cornerRadius = newImageView.frame.size.height/8;
     [topWallpaperEffectView addSubview:newImageView];
     
-    newImageView.translatesAutoresizingMaskIntoConstraints = false;
+        newImageView.translatesAutoresizingMaskIntoConstraints = false;
     [newImageView.widthAnchor constraintEqualToConstant:artworkSize].active = true;
     [newImageView.heightAnchor constraintEqualToConstant:artworkSize].active = true;
     [newImageView.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX].active = true;
@@ -399,7 +411,7 @@ NSTimer *updateTimer;
     [previousButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170-50].active = true;
     [previousButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
     
-    newImageView.hidden = YES;
+        newImageView.hidden = YES;
     newBGImageView.hidden = YES;
     nowPlayingInfoSong.hidden = YES;
     nowPlayingInfoArtist.hidden = YES;
@@ -412,11 +424,15 @@ NSTimer *updateTimer;
     [notificationCenter addObserver:self selector:@selector(updateImage:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
     [notificationCenter postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
         
+    }
+}
+
+- (void)viewDidLoad {
+    %orig;
     if ([[%c(SBReachabilityManager) sharedInstance] reachabilityModeActive] == YES) {
         updateTimer = [NSTimer scheduledTimerWithTimeInterval:keepAliveDuration target:self selector:@selector(updateReachability) userInfo:nil repeats:NO];
         [[NSRunLoop mainRunLoop] addTimer:updateTimer forMode:NSDefaultRunLoopMode];
         }
-    }
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
