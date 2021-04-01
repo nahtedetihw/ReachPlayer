@@ -410,6 +410,20 @@ NSTimer *updateTimer;
     [previousButton.heightAnchor constraintEqualToConstant:30].active = true;
     [previousButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170-50].active = true;
     [previousButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
+        
+        CATransition *transition = [CATransition animation];
+        transition.duration = 1.0f;
+        transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+        transition.type = kCATransitionFade;
+
+        [newImageView.layer addAnimation:transition forKey:nil];
+        
+        CATransition *transitionBG = [CATransition animation];
+        transitionBG.duration = 1.0f;
+        transitionBG.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+        transitionBG.type = kCATransitionFade;
+
+        [newBGImageView.layer addAnimation:transitionBG forKey:nil];
     
         newImageView.hidden = YES;
     newBGImageView.hidden = YES;
@@ -433,6 +447,11 @@ NSTimer *updateTimer;
         updateTimer = [NSTimer scheduledTimerWithTimeInterval:keepAliveDuration target:self selector:@selector(updateReachability) userInfo:nil repeats:NO];
         [[NSRunLoop mainRunLoop] addTimer:updateTimer forMode:NSDefaultRunLoopMode];
         }
+    if (isPlaying()) {
+        [playPauseButton setImage:[[UIImage systemImageNamed:@"pause.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    } else {
+        [playPauseButton setImage:[[UIImage systemImageNamed:@"play.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    }
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -464,6 +483,20 @@ NSTimer *updateTimer;
     MRMediaRemoteSendCommand(kMRNextTrack, nil);
     NSLog(@"ReachPlayer DEBUG: %@", @"Next");
     AudioServicesPlaySystemSound(1519);
+    
+    CATransition *transition = [CATransition animation];
+    transition.duration = 1.0f;
+    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+    transition.type = kCATransitionFade;
+
+    [newImageView.layer addAnimation:transition forKey:nil];
+    
+    CATransition *transitionBG = [CATransition animation];
+    transitionBG.duration = 1.0f;
+    transitionBG.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+    transitionBG.type = kCATransitionFade;
+
+    [newBGImageView.layer addAnimation:transitionBG forKey:nil];
 }
 
 %new
@@ -471,6 +504,20 @@ NSTimer *updateTimer;
     MRMediaRemoteSendCommand(kMRPreviousTrack, nil);
     NSLog(@"ReachPlayer DEBUG: %@", @"Previous");
     AudioServicesPlaySystemSound(1519);
+    
+    CATransition *transition = [CATransition animation];
+    transition.duration = 1.0f;
+    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+    transition.type = kCATransitionFade;
+
+    [newImageView.layer addAnimation:transition forKey:nil];
+    
+    CATransition *transitionBG = [CATransition animation];
+    transitionBG.duration = 1.0f;
+    transitionBG.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+    transitionBG.type = kCATransitionFade;
+
+    [newBGImageView.layer addAnimation:transitionBG forKey:nil];
 }
 
 %new
@@ -490,15 +537,11 @@ NSTimer *updateTimer;
         NSData *artworkData = [dictionary objectForKey:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoArtworkData];
 
         if (artworkData != nil) {
-            [UIView animateWithDuration:0.3 animations:^{
-                newImageView.image = [UIImage imageWithData:artworkData];
-                newBGImageView.image = [UIImage imageWithData:artworkData];
-            }];
+            newImageView.image = [UIImage imageWithData:artworkData];
+            newBGImageView.image = [UIImage imageWithData:artworkData];
         } else {
-            [UIView animateWithDuration:0.3 animations:^{
-                newImageView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
-                newBGImageView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
-            }];
+            newImageView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
+            newBGImageView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
         }
             
             if (songName != nil) {

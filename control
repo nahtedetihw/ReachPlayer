@@ -1,6 +1,6 @@
 Package: com.nahtedetihw.reachplayer
 Name: ReachPlayer
-Version: 1.5
+Version: 1.6
 Architecture: iphoneos-arm
 Description: Now Playing info in Reachability Window!
 Maintainer: Ethan Whited

@@ -117,6 +117,9 @@ UIView *gradientView1;
     gradient1.masksToBounds = YES;
     gradient1.needsDisplayOnBoundsChange = YES;
     gradient1.colors = [NSArray arrayWithObjects:(id)topGradient.CGColor, (id)bottomGradient.CGColor, nil];
+    gradient1.startPoint = CGPointMake(0.0,0.5);
+    gradient1.endPoint = CGPointMake(1.0,0.5);
+    gradient1.locations = @[@1, @0];
     gradient1.transform = CATransform3DMakeScale(4, 1, 1);
     
     UIImage *gradientMaskImage = [UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/reachplayerprefs.bundle/banner.png"];
@@ -150,48 +153,20 @@ UIView *gradientView1;
 
 }
 - (void)addAnimation {
-    const CFTimeInterval duration = 10;
+    UIColor *topGradient = [UIColor colorWithRed:109/255.0f green:133/255.0f blue:143/255.0f alpha:1.0f];
+    UIColor *bottomGradient = [UIColor colorWithRed:60/255.0f green:83/255.0f blue:103/255.0f alpha:1.0f];
     
-    const CAKeyframeAnimation *startPointAnimation = [CAKeyframeAnimation animationWithKeyPath:@"startPoint"];
-    startPointAnimation.calculationMode = kCAAnimationPaced;
-    startPointAnimation.rotationMode = kCAAnimationRotateAuto;
-    startPointAnimation.values = @[
-    [NSValue valueWithCGPoint:CGPointMake(0, 1)],
-    [NSValue valueWithCGPoint:CGPointMake(1, 1)],
-    [NSValue valueWithCGPoint:CGPointMake(1, 1)],
-    [NSValue valueWithCGPoint:CGPointMake(1, 0)],
-    [NSValue valueWithCGPoint:CGPointMake(1, 0)],
-    [NSValue valueWithCGPoint:CGPointMake(0, -1)],
-    [NSValue valueWithCGPoint:CGPointMake(0, -1)],
-    [NSValue valueWithCGPoint:CGPointMake(-1, 0)],
-    [NSValue valueWithCGPoint:CGPointMake(-1, 0)],
-    [NSValue valueWithCGPoint:CGPointMake(0, 1)],
-    ];
-
-    startPointAnimation.duration = duration;
-    const CAKeyframeAnimation *endPointAnimation = [CAKeyframeAnimation animationWithKeyPath:@"endPoint"];
-    endPointAnimation.calculationMode = kCAAnimationPaced;
-    endPointAnimation.rotationMode = kCAAnimationRotateAuto;
-    endPointAnimation.values = @[
-    [NSValue valueWithCGPoint:CGPointMake(0, -1)],
-    [NSValue valueWithCGPoint:CGPointMake(-1, -1)],
-    [NSValue valueWithCGPoint:CGPointMake(-1, -1)],
-    [NSValue valueWithCGPoint:CGPointMake(-1, 0)],
-    [NSValue valueWithCGPoint:CGPointMake(-1, 0)],
-    [NSValue valueWithCGPoint:CGPointMake(0, 1)],
-    [NSValue valueWithCGPoint:CGPointMake(0, 1)],
-    [NSValue valueWithCGPoint:CGPointMake(1, 0)],
-    [NSValue valueWithCGPoint:CGPointMake(1, 0)],
-    [NSValue valueWithCGPoint:CGPointMake(0, -1)],
-    ];
-    endPointAnimation.duration = duration;
+    const CFTimeInterval duration = 5;
     
-    CAAnimationGroup *animationGroup = [CAAnimationGroup new];
-    animationGroup.animations = @[startPointAnimation, endPointAnimation];
-    animationGroup.duration = duration;
-    animationGroup.repeatCount = INFINITY;
+    CABasicAnimation *gradientAnimation = [CABasicAnimation animation];
+    gradientAnimation.keyPath = @"colors";
+    gradientAnimation.fromValue = @[(id)topGradient.CGColor,(id)bottomGradient.CGColor];
+    gradientAnimation.toValue = @[(id)bottomGradient.CGColor,(id)topGradient.CGColor];
+    gradientAnimation.duration = duration;
+    gradientAnimation.repeatCount = INFINITY;
+    gradientAnimation.autoreverses = YES;
 
-    [gradient1 addAnimation:animationGroup forKey:@"chatAnimation"];
+    [gradient1 addAnimation:gradientAnimation forKey:@"chatAnimation"];
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
