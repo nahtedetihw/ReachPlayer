@@ -3,6 +3,7 @@
 #import <Cephei/HBPreferences.h>
 
 UIBarButtonItem *respringButtonItem;
+UIBarButtonItem *twitterButtonItem;
 UIViewController *popController;
 
 CAGradientLayer *gradient1;
@@ -40,7 +41,20 @@ UIView *gradientView1;
         
         respringButtonItem = [[UIBarButtonItem alloc] initWithCustomView:respringButton];
         
-        self.navigationItem.rightBarButtonItem = respringButtonItem;
+        UIButton *twitterButton =  [UIButton buttonWithType:UIButtonTypeCustom];
+        twitterButton.frame = CGRectMake(0,0,30,30);
+        twitterButton.layer.cornerRadius = twitterButton.frame.size.height / 2;
+        twitterButton.layer.masksToBounds = YES;
+        twitterButton.backgroundColor = [UIColor colorWithRed:60/255.0f green:83/255.0f blue:103/255.0f alpha:1.0f];
+        [twitterButton setImage:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/reachplayerprefs.bundle/twitter.png"] forState:UIControlStateNormal];
+        [twitterButton addTarget:self action:@selector(twitter:) forControlEvents:UIControlEventTouchUpInside];
+        twitterButton.tintColor = [UIColor colorWithRed:109/255.0f green:133/255.0f blue:143/255.0f alpha:1.0f];
+        
+        twitterButtonItem = [[UIBarButtonItem alloc] initWithCustomView:twitterButton];
+        
+        NSArray *rightButtons;
+        rightButtons = @[respringButtonItem, twitterButtonItem];
+        self.navigationItem.rightBarButtonItems = rightButtons;
         self.navigationItem.titleView = [UIView new];
         self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 10, 10)];
         self.titleLabel.font = [UIFont boldSystemFontOfSize:18];
@@ -236,6 +250,10 @@ UIView *gradientView1;
     
     AudioServicesPlaySystemSound(1519);
 
+}
+
+- (void)twitter:(id)sender {
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://twitter.com/EthanWhited"] options:@{} completionHandler:nil];
 }
 
 - (void)handleYesGesture:(UIButton *)sender {

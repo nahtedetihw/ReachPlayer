@@ -1,11 +1,9 @@
-#import <AudioToolbox/AudioServices.h>
-#import "MediaRemote.h"
-#import "CBAutoScrollLabel.h"
-#import <Cephei/HBPreferences.h>
+#import "Tweak.h"
 
 HBPreferences *preferences;
 BOOL enable;
 BOOL enableBlur;
+BOOL enableTapToToggle;
 double chevronOpacity;
 double keepAliveDuration;
 double positionX;
@@ -13,73 +11,43 @@ double positionY;
 double artworkSize;
 double reachOffset;
 
-@interface SBWallpaperEffectView : UIVisualEffectView
-@end
-
-@interface SBReachabilityBackgroundView : UIView
-@end
-
-@interface SBReachabilityBackgroundViewController : UIViewController
-- (UIColor *)getAverageColorFrom:(UIImage *)image withAlpha:(double)alpha;
-- (UIColor *)lightDarkFromColor:(UIColor*)color;
-- (void)updateImage:(NSNotification *)notification;
-- (void)updateReachability;
-- (void)playPause;
-- (void)next;
-- (void)previous;
-@end
-
-@interface UIColor (Private)
--(BOOL)_isSimilarToColor:(id)arg1 withinPercentage:(double)arg2 ;
-@end
-
-@interface _UIBackdropView : UIView
-@property (assign,nonatomic) BOOL blurRadiusSetOnce;
-@property (nonatomic,copy) NSString * _blurQuality;
-@property (assign,nonatomic) double _blurRadius;
--(id)initWithFrame:(CGRect)arg1 autosizesToFitSuperview:(BOOL)arg2 settings:(id)arg3 ;
--(id)initWithSettings:(id)arg1 ;
-@end
-
-@interface _UIBackdropViewSettings : NSObject
-+(id)settingsForStyle:(long long)arg1 ;
-@end
-
-@interface SBReachabilityManager : NSObject
--(void)_setKeepAliveTimer;
-+(id)sharedInstance;
--(void)toggleReachability;
--(BOOL)reachabilityModeActive;
-@end
-
-@interface SBMediaController
-+ (id)sharedInstance;
-- (BOOL)isPlaying;
-@end
-
-@interface SBReachabilityWindow : UIWindow
-- (id)view;
-@end
-
-@interface SBHomeScreenSpotlightViewController : UIViewController
-@end
-
 BOOL isPlaying() {
     return [[%c(SBMediaController) sharedInstance] isPlaying];
 }
 
-UIImageView *newImageView;
+UIView *emptyView;
 UIImageView *newBGImageView;
+UIImageView *newImageView;
 CBAutoScrollLabel *nowPlayingInfoSong;
 CBAutoScrollLabel *nowPlayingInfoArtist;
 CBAutoScrollLabel *nowPlayingInfoAlbum;
+NSTimer *updateTimer;
 UIButton *playPauseButton;
 UIButton *nextButton;
 UIButton *previousButton;
-UIView *emptyView;
-NSTimer *updateTimer;
 
 %group ReachPlayer
+
+// tap to toggle
+%hook _UIStatusBarForegroundView
+- (id)initWithFrame:(CGRect)frame {
+    self = %orig;
+    
+    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleStatusReachability:)];
+    self.userInteractionEnabled = YES;
+    tapGesture.numberOfTapsRequired = 2;
+    [self addGestureRecognizer:tapGesture];
+    
+    return self;
+}
+
+%new
+- (void)toggleStatusReachability:(id)sender {
+    if (enableTapToToggle) {
+    [[%c(SBReachabilityManager) sharedInstance] toggleReachability];
+    }
+}
+%end
 
 %hook SBSearchScrollView
 // disable Spotlight when Reachability active
@@ -232,15 +200,15 @@ NSTimer *updateTimer;
     SBWallpaperEffectView *topWallpaperEffectView = MSHookIvar<SBWallpaperEffectView *>(((SBReachabilityBackgroundView *)self.view), "_topWallpaperEffectView");
     
     if (topWallpaperEffectView != nil) {
-    newBGImageView = [[UIImageView alloc] initWithFrame:topWallpaperEffectView.bounds];
-    newBGImageView.contentMode = UIViewContentModeScaleAspectFill;
-    newBGImageView.hidden = YES;
+        newBGImageView = [[UIImageView alloc] initWithFrame:topWallpaperEffectView.bounds];
+        newBGImageView.contentMode = UIViewContentModeScaleAspectFill;
+        newBGImageView.hidden = YES;
     if (enableBlur) {
         newBGImageView.hidden = NO;
     }
     [topWallpaperEffectView addSubview:newBGImageView];
     
-    newBGImageView.translatesAutoresizingMaskIntoConstraints = false;
+        newBGImageView.translatesAutoresizingMaskIntoConstraints = false;
     [newBGImageView.bottomAnchor constraintEqualToAnchor:topWallpaperEffectView.bottomAnchor constant:0].active = YES;
     [newBGImageView.leftAnchor constraintEqualToAnchor:topWallpaperEffectView.leftAnchor constant:0].active = YES;
     [newBGImageView.rightAnchor constraintEqualToAnchor:topWallpaperEffectView.rightAnchor constant:0].active = YES;
@@ -277,73 +245,73 @@ NSTimer *updateTimer;
     [newImageView.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX].active = true;
     [newImageView.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-10].active = true;
     
-    nowPlayingInfoSong = [[CBAutoScrollLabel alloc] init];
-    nowPlayingInfoSong.textAlignment = NSTextAlignmentLeft;
-    nowPlayingInfoSong.font = [UIFont boldSystemFontOfSize:20];
-    nowPlayingInfoSong.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY-25, 150, 20);
+        nowPlayingInfoSong = [[CBAutoScrollLabel alloc] init];
+        nowPlayingInfoSong.textAlignment = NSTextAlignmentLeft;
+        nowPlayingInfoSong.font = [UIFont boldSystemFontOfSize:20];
+        nowPlayingInfoSong.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY-25, 150, 20);
     if (newImageView.image != nil) {
         nowPlayingInfoSong.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
     } else {
         nowPlayingInfoSong.textColor = [UIColor labelColor];
     }
-    nowPlayingInfoSong.clipsToBounds = NO;
-    nowPlayingInfoSong.isAccessibilityElement = YES;
-    nowPlayingInfoSong.accessibilityHint = @"Name of the currently playing song.";
+        nowPlayingInfoSong.clipsToBounds = NO;
+        nowPlayingInfoSong.isAccessibilityElement = YES;
+        nowPlayingInfoSong.accessibilityHint = @"Name of the currently playing song.";
     [topWallpaperEffectView addSubview:nowPlayingInfoSong];
     
-    nowPlayingInfoSong.translatesAutoresizingMaskIntoConstraints = false;
+        nowPlayingInfoSong.translatesAutoresizingMaskIntoConstraints = false;
     [nowPlayingInfoSong.widthAnchor constraintEqualToConstant:150].active = true;
     [nowPlayingInfoSong.heightAnchor constraintEqualToConstant:20].active = true;
     [nowPlayingInfoSong.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
     [nowPlayingInfoSong.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-40].active = true;
     
     
-    nowPlayingInfoArtist = [[CBAutoScrollLabel alloc] init];
-    nowPlayingInfoArtist.textAlignment = NSTextAlignmentLeft;
-    nowPlayingInfoArtist.font = [UIFont boldSystemFontOfSize:14];
-    nowPlayingInfoArtist.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 150, 20);
-    nowPlayingInfoArtist.alpha = 0.6;
+        nowPlayingInfoArtist = [[CBAutoScrollLabel alloc] init];
+        nowPlayingInfoArtist.textAlignment = NSTextAlignmentLeft;
+        nowPlayingInfoArtist.font = [UIFont boldSystemFontOfSize:14];
+        nowPlayingInfoArtist.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 150, 20);
+        nowPlayingInfoArtist.alpha = 0.6;
     if (newImageView.image != nil) {
         nowPlayingInfoArtist.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
     } else {
         nowPlayingInfoArtist.textColor = [UIColor labelColor];
     }
-    nowPlayingInfoArtist.clipsToBounds = NO;
-    nowPlayingInfoArtist.isAccessibilityElement = YES;
-    nowPlayingInfoArtist.accessibilityHint = @"Name of the currently playing artist.";
+        nowPlayingInfoArtist.clipsToBounds = NO;
+        nowPlayingInfoArtist.isAccessibilityElement = YES;
+        nowPlayingInfoArtist.accessibilityHint = @"Name of the currently playing artist.";
     [topWallpaperEffectView addSubview:nowPlayingInfoArtist];
     
-    nowPlayingInfoArtist.translatesAutoresizingMaskIntoConstraints = false;
+        nowPlayingInfoArtist.translatesAutoresizingMaskIntoConstraints = false;
     [nowPlayingInfoArtist.widthAnchor constraintEqualToConstant:150].active = true;
     [nowPlayingInfoArtist.heightAnchor constraintEqualToConstant:20].active = true;
     [nowPlayingInfoArtist.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
     [nowPlayingInfoArtist.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-20].active = true;
     
     
-    nowPlayingInfoAlbum = [[CBAutoScrollLabel alloc] init];
-    nowPlayingInfoAlbum.textAlignment = NSTextAlignmentLeft;
-    nowPlayingInfoAlbum.font = [UIFont systemFontOfSize:14];
-    nowPlayingInfoAlbum.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY+25, 150, 20);
-    nowPlayingInfoAlbum.alpha = 0.2;
+        nowPlayingInfoAlbum = [[CBAutoScrollLabel alloc] init];
+        nowPlayingInfoAlbum.textAlignment = NSTextAlignmentLeft;
+        nowPlayingInfoAlbum.font = [UIFont systemFontOfSize:14];
+        nowPlayingInfoAlbum.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY+25, 150, 20);
+        nowPlayingInfoAlbum.alpha = 0.2;
     if (newImageView.image != nil) {
         nowPlayingInfoAlbum.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
     } else {
         nowPlayingInfoAlbum.textColor = [UIColor labelColor];
     }
-    nowPlayingInfoAlbum.clipsToBounds = NO;
-    nowPlayingInfoAlbum.isAccessibilityElement = YES;
-    nowPlayingInfoAlbum.accessibilityHint = @"Name of the currently playing album.";
+        nowPlayingInfoAlbum.clipsToBounds = NO;
+        nowPlayingInfoAlbum.isAccessibilityElement = YES;
+        nowPlayingInfoAlbum.accessibilityHint = @"Name of the currently playing album.";
     [topWallpaperEffectView addSubview:nowPlayingInfoAlbum];
     
-    nowPlayingInfoAlbum.translatesAutoresizingMaskIntoConstraints = false;
+        nowPlayingInfoAlbum.translatesAutoresizingMaskIntoConstraints = false;
     [nowPlayingInfoAlbum.widthAnchor constraintEqualToConstant:150].active = true;
     [nowPlayingInfoAlbum.heightAnchor constraintEqualToConstant:20].active = true;
     [nowPlayingInfoAlbum.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
     [nowPlayingInfoAlbum.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY].active = true;
         
-    playPauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        playPauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
     [playPauseButton setTitle:@"" forState:UIControlStateNormal];
-    playPauseButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 30, 30);
+        playPauseButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 30, 30);
     if (isPlaying()) {
         [playPauseButton setImage:[[UIImage systemImageNamed:@"pause.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
     } else {
@@ -357,18 +325,18 @@ NSTimer *updateTimer;
     [playPauseButton addTarget:self
                   action:@selector(playPause)
         forControlEvents:UIControlEventTouchUpInside];
-    playPauseButton.isAccessibilityElement = YES;
-    playPauseButton.accessibilityHint = @"Play Pause Song Button.";
+        playPauseButton.isAccessibilityElement = YES;
+        playPauseButton.accessibilityHint = @"Play Pause Song Button.";
     [topWallpaperEffectView addSubview:playPauseButton];
         
-    playPauseButton.translatesAutoresizingMaskIntoConstraints = false;
+        playPauseButton.translatesAutoresizingMaskIntoConstraints = false;
     [playPauseButton.widthAnchor constraintEqualToConstant:30].active = true;
     [playPauseButton.heightAnchor constraintEqualToConstant:30].active = true;
     [playPauseButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
     [playPauseButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
         
-    nextButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    nextButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 30, 30);
+        nextButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        nextButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 30, 30);
     [nextButton setTitle:@"" forState:UIControlStateNormal];
     [nextButton setImage:[[UIImage systemImageNamed:@"forward.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
     if (newImageView.image != nil) {
@@ -379,18 +347,18 @@ NSTimer *updateTimer;
     [nextButton addTarget:self
                       action:@selector(next)
             forControlEvents:UIControlEventTouchUpInside];
-    nextButton.isAccessibilityElement = YES;
-    nextButton.accessibilityHint = @"Next Song Button.";
+        nextButton.isAccessibilityElement = YES;
+        nextButton.accessibilityHint = @"Next Song Button.";
     [topWallpaperEffectView addSubview:nextButton];
         
-    nextButton.translatesAutoresizingMaskIntoConstraints = false;
+        nextButton.translatesAutoresizingMaskIntoConstraints = false;
     [nextButton.widthAnchor constraintEqualToConstant:30].active = true;
     [nextButton.heightAnchor constraintEqualToConstant:30].active = true;
     [nextButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170+50].active = true;
     [nextButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
         
-    previousButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    previousButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 30, 30);
+        previousButton = [UIButton buttonWithType:UIButtonTypeCustom];
+        previousButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 30, 30);
     [previousButton setTitle:@"" forState:UIControlStateNormal];
     [previousButton setImage:[[UIImage systemImageNamed:@"backward.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
     if (newImageView.image != nil) {
@@ -401,38 +369,24 @@ NSTimer *updateTimer;
     [previousButton addTarget:self
                   action:@selector(previous)
         forControlEvents:UIControlEventTouchUpInside];
-    previousButton.isAccessibilityElement = YES;
-    previousButton.accessibilityHint = @"Next Song Button.";
+        previousButton.isAccessibilityElement = YES;
+        previousButton.accessibilityHint = @"Next Song Button.";
     [topWallpaperEffectView addSubview:previousButton];
         
-    previousButton.translatesAutoresizingMaskIntoConstraints = false;
+        previousButton.translatesAutoresizingMaskIntoConstraints = false;
     [previousButton.widthAnchor constraintEqualToConstant:30].active = true;
     [previousButton.heightAnchor constraintEqualToConstant:30].active = true;
     [previousButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170-50].active = true;
     [previousButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
-        
-        CATransition *transition = [CATransition animation];
-        transition.duration = 1.0f;
-        transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-        transition.type = kCATransitionFade;
-
-        [newImageView.layer addAnimation:transition forKey:nil];
-        
-        CATransition *transitionBG = [CATransition animation];
-        transitionBG.duration = 1.0f;
-        transitionBG.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-        transitionBG.type = kCATransitionFade;
-
-        [newBGImageView.layer addAnimation:transitionBG forKey:nil];
     
         newImageView.hidden = YES;
-    newBGImageView.hidden = YES;
-    nowPlayingInfoSong.hidden = YES;
-    nowPlayingInfoArtist.hidden = YES;
-    nowPlayingInfoAlbum.hidden = YES;
-    playPauseButton.hidden = YES;
-    nextButton.hidden = YES;
-    previousButton.hidden = YES;
+        newBGImageView.hidden = YES;
+        nowPlayingInfoSong.hidden = YES;
+        nowPlayingInfoArtist.hidden = YES;
+        nowPlayingInfoAlbum.hidden = YES;
+        playPauseButton.hidden = YES;
+        nextButton.hidden = YES;
+        previousButton.hidden = YES;
         
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
     [notificationCenter addObserver:self selector:@selector(updateImage:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
@@ -443,6 +397,7 @@ NSTimer *updateTimer;
 
 - (void)viewDidLoad {
     %orig;
+    
     if ([[%c(SBReachabilityManager) sharedInstance] reachabilityModeActive] == YES) {
         updateTimer = [NSTimer scheduledTimerWithTimeInterval:keepAliveDuration target:self selector:@selector(updateReachability) userInfo:nil repeats:NO];
         [[NSRunLoop mainRunLoop] addTimer:updateTimer forMode:NSDefaultRunLoopMode];
@@ -452,6 +407,23 @@ NSTimer *updateTimer;
     } else {
         [playPauseButton setImage:[[UIImage systemImageNamed:@"play.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
     }
+}
+
+%new
+- (void)updateTransition {
+    CATransition *transition = [CATransition animation];
+    transition.duration = 1.0f;
+    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+    transition.type = kCATransitionFade;
+
+    [newImageView.layer addAnimation:transition forKey:nil];
+    
+    CATransition *transitionBG = [CATransition animation];
+    transitionBG.duration = 1.0f;
+    transitionBG.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+    transitionBG.type = kCATransitionFade;
+
+    [newBGImageView.layer addAnimation:transitionBG forKey:nil];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
@@ -484,19 +456,7 @@ NSTimer *updateTimer;
     NSLog(@"ReachPlayer DEBUG: %@", @"Next");
     AudioServicesPlaySystemSound(1519);
     
-    CATransition *transition = [CATransition animation];
-    transition.duration = 1.0f;
-    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-    transition.type = kCATransitionFade;
-
-    [newImageView.layer addAnimation:transition forKey:nil];
-    
-    CATransition *transitionBG = [CATransition animation];
-    transitionBG.duration = 1.0f;
-    transitionBG.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-    transitionBG.type = kCATransitionFade;
-
-    [newBGImageView.layer addAnimation:transitionBG forKey:nil];
+    [self updateTransition];
 }
 
 %new
@@ -505,19 +465,7 @@ NSTimer *updateTimer;
     NSLog(@"ReachPlayer DEBUG: %@", @"Previous");
     AudioServicesPlaySystemSound(1519);
     
-    CATransition *transition = [CATransition animation];
-    transition.duration = 1.0f;
-    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-    transition.type = kCATransitionFade;
-
-    [newImageView.layer addAnimation:transition forKey:nil];
-    
-    CATransition *transitionBG = [CATransition animation];
-    transitionBG.duration = 1.0f;
-    transitionBG.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-    transitionBG.type = kCATransitionFade;
-
-    [newBGImageView.layer addAnimation:transitionBG forKey:nil];
+    [self updateTransition];
 }
 
 %new
@@ -545,27 +493,27 @@ NSTimer *updateTimer;
         }
             
             if (songName != nil) {
-            nowPlayingInfoSong.text = [NSString stringWithFormat:@"%@", songName];
-            nowPlayingInfoSong.accessibilityLabel = [NSString stringWithFormat:@"%@", songName];
+                nowPlayingInfoSong.text = [NSString stringWithFormat:@"%@", songName];
+                nowPlayingInfoSong.accessibilityLabel = [NSString stringWithFormat:@"%@", songName];
             } else {
-            nowPlayingInfoSong.text = @" ";
-            nowPlayingInfoSong.accessibilityLabel = @" ";
+                nowPlayingInfoSong.text = @" ";
+                nowPlayingInfoSong.accessibilityLabel = @" ";
             }
             
             if (artistName != nil) {
-            nowPlayingInfoArtist.text = [NSString stringWithFormat:@"%@", artistName];
-            nowPlayingInfoArtist.accessibilityLabel = [NSString stringWithFormat:@"%@", songName];
+                nowPlayingInfoArtist.text = [NSString stringWithFormat:@"%@", artistName];
+                nowPlayingInfoArtist.accessibilityLabel = [NSString stringWithFormat:@"%@", songName];
             } else {
-            nowPlayingInfoArtist.text = @" ";
-            nowPlayingInfoArtist.accessibilityLabel = @" ";
+                nowPlayingInfoArtist.text = @" ";
+                nowPlayingInfoArtist.accessibilityLabel = @" ";
             }
               
             if (albumName != nil) {
-            nowPlayingInfoAlbum.text = [NSString stringWithFormat:@"%@", albumName];
-            nowPlayingInfoAlbum.accessibilityLabel = [NSString stringWithFormat:@"%@", songName];
+                nowPlayingInfoAlbum.text = [NSString stringWithFormat:@"%@", albumName];
+                nowPlayingInfoAlbum.accessibilityLabel = [NSString stringWithFormat:@"%@", songName];
             } else {
-            nowPlayingInfoAlbum.text = @" ";
-            nowPlayingInfoAlbum.accessibilityLabel = @" ";
+                nowPlayingInfoAlbum.text = @" ";
+                nowPlayingInfoAlbum.accessibilityLabel = @" ";
             }
             
             if (enableBlur) {
@@ -685,6 +633,7 @@ NSTimer *updateTimer;
     preferences = [[HBPreferences alloc] initWithIdentifier:@"com.nahtedetihw.reachplayerprefs"];
     [preferences registerBool:&enable default:NO forKey:@"enable"];
     [preferences registerBool:&enableBlur default:NO forKey:@"enableBlur"];
+    [preferences registerBool:&enableTapToToggle default:NO forKey:@"enableTapToToggle"];
     [preferences registerDouble:&chevronOpacity default:1.0 forKey:@"chevronOpacity"];
     [preferences registerDouble:&keepAliveDuration default:8.0 forKey:@"keepAliveDuration"];
     [preferences registerDouble:&positionX default:90.0 forKey:@"positionX"];

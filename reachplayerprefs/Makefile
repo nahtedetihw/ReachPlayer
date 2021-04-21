@@ -4,13 +4,14 @@ include $(THEOS)/makefiles/common.mk
 
 PREFIX=$(THEOS)/toolchain/Xcode.xctoolchain/usr/bin/
 
+SYSROOT=$(THEOS)/sdks/iphoneos14.0.sdk
+
 BUNDLE_NAME = reachplayerprefs
 $(BUNDLE_NAME)_FILES = REACHPLAYERPreferences.m
 $(BUNDLE_NAME)_INSTALL_PATH = /Library/PreferenceBundles
 $(BUNDLE_NAME)_FRAMEWORKS = UIKit
 $(BUNDLE_NAME)_PRIVATE_FRAMEWORKS = Preferences
 $(BUNDLE_NAME)_EXTRA_FRAMEWORKS = Cephei CepheiPrefs
-$(BUNDLE_NAME)_LIBRARIES += sparkcolourpicker
 
 include $(THEOS_MAKE_PATH)/bundle.mk
 

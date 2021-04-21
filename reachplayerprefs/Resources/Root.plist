@@ -48,6 +48,26 @@
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
+			<string>Status Bar</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<false/>
+			<key>defaults</key>
+			<string>com.nahtedetihw.reachplayerprefs</string>
+			<key>key</key>
+			<string>enableTapToToggle</string>
+			<key>label</key>
+			<string>Double Tap To Toggle</string>
+			<key>PostNotification</key>
+			<string>com.nahtedetihw.reachplayerprefs/ReloadPrefs</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
 			<string>Reachability Height</string>
 		</dict>
 		<dict>
@@ -212,7 +232,7 @@
 			<key>footerAlignment</key>
 			<string>1</string>
 			<key>footerText</key>
-			<string>ReachPlayer 1.6</string>
+			<string>ReachPlayer 1.9</string>
 		</dict>
 		<dict>
 			<key>cell</key>
