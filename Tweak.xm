@@ -11,15 +11,16 @@ double positionY;
 double artworkSize;
 double reachOffset;
 
-@interface ReachPlayerArtworkView : UIImageView
+@interface ReachPlayerArtworkContainerView : UIView
+@property (nonatomic, strong) UIImageView *artworkView;
 @end
 
-@implementation ReachPlayerArtworkView
+@implementation ReachPlayerArtworkContainerView
 @end
 
 UIView *emptyView;
 UIImageView *newBGImageView;
-ReachPlayerArtworkView *newImageView;
+ReachPlayerArtworkContainerView *artworkContainerView;
 CBAutoScrollLabel *nowPlayingInfoSong;
 CBAutoScrollLabel *nowPlayingInfoArtist;
 CBAutoScrollLabel *nowPlayingInfoAlbum;
@@ -235,24 +236,36 @@ UIButton *previousButton;
     [blurView.rightAnchor constraintEqualToAnchor:topWallpaperEffectView.rightAnchor constant:0].active = YES;
     [blurView.topAnchor constraintEqualToAnchor:topWallpaperEffectView.topAnchor constant:0].active = YES;
     
-        newImageView = [[ReachPlayerArtworkView alloc] initWithFrame:CGRectMake(0,topWallpaperEffectView.center.y-positionY,artworkSize,artworkSize)];
-        newImageView.contentMode = UIViewContentModeScaleAspectFill;
-        newImageView.layer.masksToBounds = YES;
-        newImageView.layer.cornerRadius = newImageView.frame.size.height/8;
-    [topWallpaperEffectView addSubview:newImageView];
+    artworkContainerView = [[ReachPlayerArtworkContainerView alloc] initWithFrame:CGRectMake(0,topWallpaperEffectView.center.y-positionY,artworkSize,artworkSize)];
+    artworkContainerView.contentMode = UIViewContentModeScaleAspectFill;
+    artworkContainerView.layer.masksToBounds = YES;
+    artworkContainerView.layer.cornerRadius = artworkContainerView.frame.size.height/8;
+    [topWallpaperEffectView addSubview:artworkContainerView];
     
-        newImageView.translatesAutoresizingMaskIntoConstraints = false;
-    [newImageView.widthAnchor constraintEqualToConstant:artworkSize].active = true;
-    [newImageView.heightAnchor constraintEqualToConstant:artworkSize].active = true;
-    [newImageView.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX].active = true;
-    [newImageView.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-10].active = true;
+    artworkContainerView.translatesAutoresizingMaskIntoConstraints = false;
+    [artworkContainerView.widthAnchor constraintEqualToConstant:artworkSize].active = true;
+    [artworkContainerView.heightAnchor constraintEqualToConstant:artworkSize].active = true;
+    [artworkContainerView.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX].active = true;
+    [artworkContainerView.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-10].active = true;
+        
+    artworkContainerView.artworkView = [[UIImageView alloc] initWithFrame:CGRectMake(0,topWallpaperEffectView.center.y-positionY,artworkSize,artworkSize)];
+    artworkContainerView.artworkView.contentMode = UIViewContentModeScaleAspectFill;
+    artworkContainerView.artworkView.layer.masksToBounds = YES;
+    artworkContainerView.artworkView.layer.cornerRadius = artworkContainerView.frame.size.height/8;
+    [artworkContainerView insertSubview:artworkContainerView.artworkView atIndex:1];
+        
+    artworkContainerView.artworkView.translatesAutoresizingMaskIntoConstraints = false;
+    [artworkContainerView.artworkView.widthAnchor constraintEqualToConstant:artworkSize].active = true;
+    [artworkContainerView.artworkView.heightAnchor constraintEqualToConstant:artworkSize].active = true;
+    [artworkContainerView.artworkView.centerXAnchor constraintEqualToAnchor:artworkContainerView.centerXAnchor constant:0].active = true;
+    [artworkContainerView.artworkView.centerYAnchor constraintEqualToAnchor:artworkContainerView.centerYAnchor constant:0].active = true;
     
-        nowPlayingInfoSong = [[CBAutoScrollLabel alloc] init];
-        nowPlayingInfoSong.textAlignment = NSTextAlignmentLeft;
-        nowPlayingInfoSong.font = [UIFont boldSystemFontOfSize:20];
-        nowPlayingInfoSong.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY-25, 150, 20);
-    if (newImageView.image != nil) {
-        nowPlayingInfoSong.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+    nowPlayingInfoSong = [[CBAutoScrollLabel alloc] init];
+    nowPlayingInfoSong.textAlignment = NSTextAlignmentLeft;
+    nowPlayingInfoSong.font = [UIFont boldSystemFontOfSize:20];
+    nowPlayingInfoSong.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY-25, 150, 20);
+    if (artworkContainerView.artworkView.image != nil) {
+        nowPlayingInfoSong.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
     } else {
         nowPlayingInfoSong.textColor = [UIColor labelColor];
     }
@@ -273,8 +286,8 @@ UIButton *previousButton;
         nowPlayingInfoArtist.font = [UIFont boldSystemFontOfSize:14];
         nowPlayingInfoArtist.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 150, 20);
         nowPlayingInfoArtist.alpha = 0.6;
-    if (newImageView.image != nil) {
-        nowPlayingInfoArtist.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+    if (artworkContainerView.artworkView.image != nil) {
+        nowPlayingInfoArtist.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
     } else {
         nowPlayingInfoArtist.textColor = [UIColor labelColor];
     }
@@ -295,8 +308,8 @@ UIButton *previousButton;
         nowPlayingInfoAlbum.font = [UIFont systemFontOfSize:14];
         nowPlayingInfoAlbum.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY+25, 150, 20);
         nowPlayingInfoAlbum.alpha = 0.2;
-    if (newImageView.image != nil) {
-        nowPlayingInfoAlbum.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+    if (artworkContainerView.artworkView.image != nil) {
+        nowPlayingInfoAlbum.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
     } else {
         nowPlayingInfoAlbum.textColor = [UIColor labelColor];
     }
@@ -314,16 +327,16 @@ UIButton *previousButton;
         playPauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
     [playPauseButton setTitle:@"" forState:UIControlStateNormal];
         playPauseButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 15, 18);
-    if (newImageView.image != nil) {
-        playPauseButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+    if (artworkContainerView.artworkView.image != nil) {
+        playPauseButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
     } else {
         playPauseButton.tintColor = [UIColor labelColor];
     }
         
     if ([[%c(SBMediaController) sharedInstance] isPlaying] == YES) {
-        [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"play.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-    } else {
         [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"pause.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+    } else {
+        [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"play.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
     }
         
     [playPauseButton addTarget:self
@@ -343,8 +356,8 @@ UIButton *previousButton;
     nextButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 15, 15);
     [nextButton setTitle:@"" forState:UIControlStateNormal];
     [nextButton setImage:[[UIImage systemImageNamed:@"forward.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-    if (newImageView.image != nil) {
-        nextButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+    if (artworkContainerView.artworkView.image != nil) {
+        nextButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
     } else {
         nextButton.tintColor = [UIColor labelColor];
     }
@@ -365,8 +378,8 @@ UIButton *previousButton;
     previousButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 15, 15);
     [previousButton setTitle:@"" forState:UIControlStateNormal];
     [previousButton setImage:[[UIImage systemImageNamed:@"backward.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-    if (newImageView.image != nil) {
-        previousButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+    if (artworkContainerView.artworkView.image != nil) {
+        previousButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
     } else {
         previousButton.tintColor = [UIColor labelColor];
     }
@@ -383,7 +396,7 @@ UIButton *previousButton;
     [previousButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170-50].active = true;
     [previousButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
     
-        newImageView.hidden = YES;
+        artworkContainerView.artworkView.hidden = YES;
         newBGImageView.hidden = YES;
         nowPlayingInfoSong.hidden = YES;
         nowPlayingInfoArtist.hidden = YES;
@@ -415,7 +428,7 @@ UIButton *previousButton;
     transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
     transition.type = kCATransitionFade;
 
-    [newImageView.layer addAnimation:transition forKey:nil];
+    [artworkContainerView.artworkView.layer addAnimation:transition forKey:nil];
     
     CATransition *transitionBG = [CATransition animation];
     transitionBG.duration = 1.0f;
@@ -484,10 +497,10 @@ UIButton *previousButton;
         NSData *artworkData = [dictionary objectForKey:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoArtworkData];
 
         if (artworkData != nil) {
-            newImageView.image = [UIImage imageWithData:artworkData];
+            artworkContainerView.artworkView.image = [UIImage imageWithData:artworkData];
             newBGImageView.image = [UIImage imageWithData:artworkData];
         } else {
-            newImageView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
+            artworkContainerView.artworkView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
             newBGImageView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
         }
             
@@ -519,7 +532,7 @@ UIButton *previousButton;
                 newBGImageView.hidden = NO;
             }
             
-            newImageView.hidden = NO;
+            artworkContainerView.artworkView.hidden = NO;
             nowPlayingInfoSong.hidden = NO;
             nowPlayingInfoArtist.hidden = NO;
             nowPlayingInfoAlbum.hidden = NO;
@@ -527,18 +540,18 @@ UIButton *previousButton;
             nextButton.hidden = NO;
             previousButton.hidden = NO;
             
-            nowPlayingInfoSong.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
-            nowPlayingInfoArtist.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
-            nowPlayingInfoAlbum.textColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
-            playPauseButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
-            nextButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
-            previousButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:newImageView.image withAlpha:1]];
+            nowPlayingInfoSong.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
+            nowPlayingInfoArtist.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
+            nowPlayingInfoAlbum.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
+            playPauseButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
+            nextButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
+            previousButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
 
         } else {
             if (enableBlur) {
                 newBGImageView.hidden = YES;
             }
-            newImageView.hidden = YES;
+            artworkContainerView.artworkView.hidden = YES;
             nowPlayingInfoSong.hidden = YES;
             nowPlayingInfoArtist.hidden = YES;
             nowPlayingInfoAlbum.hidden = YES;
