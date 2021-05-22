@@ -18,6 +18,7 @@
 - (void)playPause;
 - (void)next;
 - (void)previous;
+- (void)playingDidChange:(NSNotification *)notification;
 @end
 
 @interface UIColor (Private)

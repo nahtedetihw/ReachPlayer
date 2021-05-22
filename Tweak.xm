@@ -326,17 +326,11 @@ UIButton *previousButton;
         
         playPauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
     [playPauseButton setTitle:@"" forState:UIControlStateNormal];
-        playPauseButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 15, 18);
+        playPauseButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 20, 25);
     if (artworkContainerView.artworkView.image != nil) {
         playPauseButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
     } else {
         playPauseButton.tintColor = [UIColor labelColor];
-    }
-        
-    if ([[%c(SBMediaController) sharedInstance] isPlaying] == YES) {
-        [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"pause.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-    } else {
-        [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"play.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
     }
         
     [playPauseButton addTarget:self
@@ -348,12 +342,12 @@ UIButton *previousButton;
         
         playPauseButton.translatesAutoresizingMaskIntoConstraints = false;
     [playPauseButton.widthAnchor constraintEqualToConstant:20].active = true;
-    [playPauseButton.heightAnchor constraintEqualToConstant:24].active = true;
+    [playPauseButton.heightAnchor constraintEqualToConstant:25].active = true;
     [playPauseButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
     [playPauseButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
         
     nextButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    nextButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 15, 15);
+    nextButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 20, 20);
     [nextButton setTitle:@"" forState:UIControlStateNormal];
     [nextButton setImage:[[UIImage systemImageNamed:@"forward.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
     if (artworkContainerView.artworkView.image != nil) {
@@ -369,13 +363,13 @@ UIButton *previousButton;
     [topWallpaperEffectView addSubview:nextButton];
         
     nextButton.translatesAutoresizingMaskIntoConstraints = false;
-    [nextButton.widthAnchor constraintEqualToConstant:15].active = true;
-    [nextButton.heightAnchor constraintEqualToConstant:15].active = true;
+    [nextButton.widthAnchor constraintEqualToConstant:20].active = true;
+    [nextButton.heightAnchor constraintEqualToConstant:20].active = true;
     [nextButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170+50].active = true;
     [nextButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
         
     previousButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    previousButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 15, 15);
+    previousButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 20, 20);
     [previousButton setTitle:@"" forState:UIControlStateNormal];
     [previousButton setImage:[[UIImage systemImageNamed:@"backward.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
     if (artworkContainerView.artworkView.image != nil) {
@@ -391,8 +385,8 @@ UIButton *previousButton;
     [topWallpaperEffectView addSubview:previousButton];
         
     previousButton.translatesAutoresizingMaskIntoConstraints = false;
-    [previousButton.widthAnchor constraintEqualToConstant:15].active = true;
-    [previousButton.heightAnchor constraintEqualToConstant:15].active = true;
+    [previousButton.widthAnchor constraintEqualToConstant:20].active = true;
+    [previousButton.heightAnchor constraintEqualToConstant:20].active = true;
     [previousButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170-50].active = true;
     [previousButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
     
@@ -409,6 +403,9 @@ UIButton *previousButton;
     [notificationCenter addObserver:self selector:@selector(updateImage:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
     [notificationCenter postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
         
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playingDidChange:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingApplicationPlaybackStateDidChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingApplicationPlaybackStateDidChangeNotification object:nil];
+        
     }
 }
 
@@ -419,6 +416,17 @@ UIButton *previousButton;
         updateTimer = [NSTimer scheduledTimerWithTimeInterval:keepAliveDuration target:self selector:@selector(updateReachability) userInfo:nil repeats:NO];
         [[NSRunLoop mainRunLoop] addTimer:updateTimer forMode:NSDefaultRunLoopMode];
         }
+}
+
+%new
+- (void)playingDidChange:(NSNotification *)notification {
+    MRMediaRemoteGetNowPlayingApplicationIsPlaying(dispatch_get_main_queue(), ^(Boolean isPlayingNow){
+            if (isPlayingNow == YES) {
+                [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"pause.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+            } else {
+                [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"play.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+            }
+        });
 }
 
 %new
@@ -454,11 +462,7 @@ UIButton *previousButton;
 - (void)playPause {
     MRMediaRemoteSendCommand(kMRTogglePlayPause, nil);
     NSLog(@"ReachPlayer DEBUG: %@", @"PlayPause");
-    if ([[%c(SBMediaController) sharedInstance] isPlaying] == YES) {
-        [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"play.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-    } else {
-        [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"pause.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-    }
+
     AudioServicesPlaySystemSound(1519);
 }
 
@@ -467,8 +471,6 @@ UIButton *previousButton;
     MRMediaRemoteSendCommand(kMRNextTrack, nil);
     NSLog(@"ReachPlayer DEBUG: %@", @"Next");
     AudioServicesPlaySystemSound(1519);
-    
-    [self updateTransition];
 }
 
 %new
@@ -476,8 +478,6 @@ UIButton *previousButton;
     MRMediaRemoteSendCommand(kMRPreviousTrack, nil);
     NSLog(@"ReachPlayer DEBUG: %@", @"Previous");
     AudioServicesPlaySystemSound(1519);
-    
-    [self updateTransition];
 }
 
 %new
@@ -609,18 +609,6 @@ UIButton *previousButton;
     }
 
     return [UIColor whiteColor];
-}
-%end
-
-%hook SpringBoard
-- (void)applicationDidFinishLaunching:(id)arg1 {
-    %orig;
-    
-    if ([[%c(SBMediaController) sharedInstance] isPlaying] == YES) {
-        [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"pause.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-    } else {
-        [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"play.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-    }
 }
 %end
 %end
