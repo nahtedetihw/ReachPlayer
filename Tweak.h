@@ -1,6 +1,6 @@
+#import <UIKit/UIKit.h>
 #import <AudioToolbox/AudioServices.h>
-#import "MediaRemote.h"
-#import "CBAutoScrollLabel.h"
+#import <MediaRemote/MediaRemote.h>
 #import <Cephei/HBPreferences.h>
 
 @interface SBWallpaperEffectView : UIVisualEffectView
@@ -44,9 +44,16 @@
 -(BOOL)reachabilityModeActive;
 @end
 
-@interface SBMediaController
+@interface SBMediaController : NSObject
 + (id)sharedInstance;
 - (BOOL)isPlaying;
+- (BOOL)changeTrack:(int)arg1 eventSource:(long long)arg2;
+- (BOOL)togglePlayPauseForEventSource:(long long)arg1;
+@end
+
+@interface UILabel (ReachPlayer)
+- (void)setMarqueeEnabled:(BOOL)arg1;
+- (void)setMarqueeRunning:(BOOL)arg1;
 @end
 
 @interface SBReachabilityWindow : UIWindow

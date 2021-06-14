@@ -12,8 +12,9 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = ReachPlayer
 
-ReachPlayer_FILES = Tweak.xm CBAutoScrollLabel.m
+ReachPlayer_FILES = Tweak.xm
 ReachPlayer_CFLAGS = -fobjc-arc
+ReachPlayer_FRAMEWORKS = UIKit
 ReachPlayer_EXTRA_FRAMEWORKS += Cephei
 ReachPlayer_PRIVATE_FRAMEWORKS = MediaRemote
 

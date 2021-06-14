@@ -4,6 +4,7 @@ HBPreferences *preferences;
 BOOL enable;
 BOOL enableBlur;
 BOOL enableTapToToggle;
+BOOL enableHaptics;
 double chevronOpacity;
 double keepAliveDuration;
 double positionX;
@@ -21,9 +22,9 @@ double reachOffset;
 UIView *emptyView;
 UIImageView *newBGImageView;
 ReachPlayerArtworkContainerView *artworkContainerView;
-CBAutoScrollLabel *nowPlayingInfoSong;
-CBAutoScrollLabel *nowPlayingInfoArtist;
-CBAutoScrollLabel *nowPlayingInfoAlbum;
+UILabel *nowPlayingInfoSong;
+UILabel *nowPlayingInfoArtist;
+UILabel *nowPlayingInfoAlbum;
 NSTimer *updateTimer;
 UIButton *playPauseButton;
 UIButton *nextButton;
@@ -260,10 +261,12 @@ UIButton *previousButton;
     [artworkContainerView.artworkView.centerXAnchor constraintEqualToAnchor:artworkContainerView.centerXAnchor constant:0].active = true;
     [artworkContainerView.artworkView.centerYAnchor constraintEqualToAnchor:artworkContainerView.centerYAnchor constant:0].active = true;
     
-    nowPlayingInfoSong = [[CBAutoScrollLabel alloc] init];
+    nowPlayingInfoSong = [[UILabel alloc] init];
     nowPlayingInfoSong.textAlignment = NSTextAlignmentLeft;
     nowPlayingInfoSong.font = [UIFont boldSystemFontOfSize:20];
     nowPlayingInfoSong.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY-25, 150, 20);
+    nowPlayingInfoSong.marqueeEnabled = YES;
+    nowPlayingInfoSong.marqueeRunning = YES;
     if (artworkContainerView.artworkView.image != nil) {
         nowPlayingInfoSong.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
     } else {
@@ -276,16 +279,17 @@ UIButton *previousButton;
     
         nowPlayingInfoSong.translatesAutoresizingMaskIntoConstraints = false;
     [nowPlayingInfoSong.widthAnchor constraintEqualToConstant:150].active = true;
-    [nowPlayingInfoSong.heightAnchor constraintEqualToConstant:20].active = true;
     [nowPlayingInfoSong.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
     [nowPlayingInfoSong.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-40].active = true;
     
     
-        nowPlayingInfoArtist = [[CBAutoScrollLabel alloc] init];
+        nowPlayingInfoArtist = [[UILabel alloc] init];
         nowPlayingInfoArtist.textAlignment = NSTextAlignmentLeft;
         nowPlayingInfoArtist.font = [UIFont boldSystemFontOfSize:14];
         nowPlayingInfoArtist.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 150, 20);
         nowPlayingInfoArtist.alpha = 0.6;
+        nowPlayingInfoArtist.marqueeEnabled = YES;
+        nowPlayingInfoArtist.marqueeRunning = YES;
     if (artworkContainerView.artworkView.image != nil) {
         nowPlayingInfoArtist.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
     } else {
@@ -298,16 +302,17 @@ UIButton *previousButton;
     
         nowPlayingInfoArtist.translatesAutoresizingMaskIntoConstraints = false;
     [nowPlayingInfoArtist.widthAnchor constraintEqualToConstant:150].active = true;
-    [nowPlayingInfoArtist.heightAnchor constraintEqualToConstant:20].active = true;
     [nowPlayingInfoArtist.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
     [nowPlayingInfoArtist.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-20].active = true;
     
     
-        nowPlayingInfoAlbum = [[CBAutoScrollLabel alloc] init];
+        nowPlayingInfoAlbum = [[UILabel alloc] init];
         nowPlayingInfoAlbum.textAlignment = NSTextAlignmentLeft;
         nowPlayingInfoAlbum.font = [UIFont systemFontOfSize:14];
         nowPlayingInfoAlbum.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY+25, 150, 20);
         nowPlayingInfoAlbum.alpha = 0.2;
+        nowPlayingInfoAlbum.marqueeEnabled = YES;
+        nowPlayingInfoAlbum.marqueeRunning = YES;
     if (artworkContainerView.artworkView.image != nil) {
         nowPlayingInfoAlbum.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
     } else {
@@ -320,7 +325,6 @@ UIButton *previousButton;
     
         nowPlayingInfoAlbum.translatesAutoresizingMaskIntoConstraints = false;
     [nowPlayingInfoAlbum.widthAnchor constraintEqualToConstant:150].active = true;
-    [nowPlayingInfoAlbum.heightAnchor constraintEqualToConstant:20].active = true;
     [nowPlayingInfoAlbum.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
     [nowPlayingInfoAlbum.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY].active = true;
         
@@ -363,7 +367,7 @@ UIButton *previousButton;
     [topWallpaperEffectView addSubview:nextButton];
         
     nextButton.translatesAutoresizingMaskIntoConstraints = false;
-    [nextButton.widthAnchor constraintEqualToConstant:20].active = true;
+    [nextButton.widthAnchor constraintEqualToConstant:23].active = true;
     [nextButton.heightAnchor constraintEqualToConstant:20].active = true;
     [nextButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170+50].active = true;
     [nextButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
@@ -385,7 +389,7 @@ UIButton *previousButton;
     [topWallpaperEffectView addSubview:previousButton];
         
     previousButton.translatesAutoresizingMaskIntoConstraints = false;
-    [previousButton.widthAnchor constraintEqualToConstant:20].active = true;
+    [previousButton.widthAnchor constraintEqualToConstant:23].active = true;
     [previousButton.heightAnchor constraintEqualToConstant:20].active = true;
     [previousButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170-50].active = true;
     [previousButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
@@ -403,8 +407,8 @@ UIButton *previousButton;
     [notificationCenter addObserver:self selector:@selector(updateImage:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
     [notificationCenter postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
         
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playingDidChange:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingApplicationPlaybackStateDidChangeNotification object:nil];
-    [[NSNotificationCenter defaultCenter] postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingApplicationPlaybackStateDidChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playingDidChange:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingApplicationIsPlayingDidChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingApplicationIsPlayingDidChangeNotification object:nil];
         
     }
 }
@@ -460,24 +464,20 @@ UIButton *previousButton;
 
 %new
 - (void)playPause {
-    MRMediaRemoteSendCommand(kMRTogglePlayPause, nil);
-    NSLog(@"ReachPlayer DEBUG: %@", @"PlayPause");
-
-    AudioServicesPlaySystemSound(1519);
+    [[%c(SBMediaController) sharedInstance] togglePlayPauseForEventSource:0];
+    if (enableHaptics) AudioServicesPlaySystemSound(1519);
 }
 
 %new
 -(void)next {
-    MRMediaRemoteSendCommand(kMRNextTrack, nil);
-    NSLog(@"ReachPlayer DEBUG: %@", @"Next");
-    AudioServicesPlaySystemSound(1519);
+    [[%c(SBMediaController) sharedInstance] changeTrack:1 eventSource:0];
+    if (enableHaptics) AudioServicesPlaySystemSound(1519);
 }
 
 %new
 -(void)previous {
-    MRMediaRemoteSendCommand(kMRPreviousTrack, nil);
-    NSLog(@"ReachPlayer DEBUG: %@", @"Previous");
-    AudioServicesPlaySystemSound(1519);
+    [[%c(SBMediaController) sharedInstance] changeTrack:-1 eventSource:0];
+    if (enableHaptics) AudioServicesPlaySystemSound(1519);
 }
 
 %new
@@ -614,34 +614,14 @@ UIButton *previousButton;
 %end
 
 %ctor {
-    
-    BOOL shouldLoad = NO;
-    NSArray *args = [[NSClassFromString(@"NSProcessInfo") processInfo] arguments];
-    NSUInteger count = args.count;
-    if (count != 0) {
-        NSString *executablePath = args[0];
-        if (executablePath) {
-            NSString *processName = [executablePath lastPathComponent];
-            BOOL isSpringBoard = [processName isEqualToString:@"SpringBoard"];
-            BOOL isPreferences = [processName isEqualToString:@"Preferences"];
-            BOOL isApplication = [executablePath rangeOfString:@"/Application/"].location != NSNotFound || [executablePath rangeOfString:@"/Applications/"].location != NSNotFound;
-            BOOL isFileProvider = [[processName lowercaseString] rangeOfString:@"fileprovider"].location != NSNotFound;
-            BOOL skip = [processName isEqualToString:@"AdSheet"]
-            || [processName isEqualToString:@"CoreAuthUI"]
-            || [processName isEqualToString:@"InCallService"]
-            || [processName isEqualToString:@"MessagesNotificationViewService"]
-            || [executablePath rangeOfString:@".appex/"].location != NSNotFound;
-            if (!isFileProvider && (isSpringBoard || isApplication || isPreferences) && !skip) {
-                shouldLoad = YES;
-            }
-        }
-    }
-    if (shouldLoad) {
 
     preferences = [[HBPreferences alloc] initWithIdentifier:@"com.nahtedetihw.reachplayerprefs"];
     [preferences registerBool:&enable default:NO forKey:@"enable"];
+    if (!enable) return;
+
     [preferences registerBool:&enableBlur default:NO forKey:@"enableBlur"];
     [preferences registerBool:&enableTapToToggle default:NO forKey:@"enableTapToToggle"];
+    [preferences registerBool:&enableHaptics default:YES forKey:@"enableHaptics"];
     [preferences registerDouble:&chevronOpacity default:1.0 forKey:@"chevronOpacity"];
     [preferences registerDouble:&keepAliveDuration default:8.0 forKey:@"keepAliveDuration"];
     [preferences registerDouble:&positionX default:90.0 forKey:@"positionX"];
@@ -649,10 +629,6 @@ UIButton *previousButton;
     [preferences registerDouble:&artworkSize default:160.0 forKey:@"artworkSize"];
     [preferences registerDouble:&reachOffset default:0.4 forKey:@"reachOffset"];
     
-    if (enable) {
     %init(ReachPlayer);
-    return;
-    }
-    return;
-}
+
 }
