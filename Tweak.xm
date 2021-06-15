@@ -36,20 +36,21 @@ UIButton *previousButton;
 %hook _UIStatusBarForegroundView
 - (id)initWithFrame:(CGRect)frame {
     self = %orig;
-    
-    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleStatusReachability:)];
-    self.userInteractionEnabled = YES;
-    tapGesture.numberOfTapsRequired = 2;
-    [self addGestureRecognizer:tapGesture];
+    if (enableTapToToggle) {
+        UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleStatusReachability:)];
+        self.userInteractionEnabled = YES;
+        tapGesture.numberOfTapsRequired = 2;
+        [self addGestureRecognizer:tapGesture];
+    }
     
     return self;
 }
 
 %new
 - (void)toggleStatusReachability:(id)sender {
-    if (enableTapToToggle) {
+    
     [[%c(SBReachabilityManager) sharedInstance] toggleReachability];
-    }
+    
 }
 %end
 
