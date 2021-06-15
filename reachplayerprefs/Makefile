@@ -1,10 +1,10 @@
-ARCHS = arm64 arm64e
+# ARCHS = arm64 arm64e
 
 include $(THEOS)/makefiles/common.mk
 
-PREFIX=$(THEOS)/toolchain/Xcode.xctoolchain/usr/bin/
+# PREFIX=$(THEOS)/toolchain/Xcode.xctoolchain/usr/bin/
 
-SYSROOT=$(THEOS)/sdks/iphoneos14.0.sdk
+# SYSROOT=$(THEOS)/sdks/iphoneos14.0.sdk
 
 BUNDLE_NAME = reachplayerprefs
 $(BUNDLE_NAME)_FILES = REACHPLAYERPreferences.m

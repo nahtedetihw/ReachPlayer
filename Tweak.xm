@@ -345,7 +345,7 @@ UIButton *previousButton;
         
         playPauseButton.translatesAutoresizingMaskIntoConstraints = false;
     [playPauseButton.widthAnchor constraintEqualToConstant:20].active = true;
-    [playPauseButton.heightAnchor constraintEqualToConstant:25].active = true;
+    [playPauseButton.heightAnchor constraintEqualToConstant:23].active = true;
     [playPauseButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
     [playPauseButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
         
