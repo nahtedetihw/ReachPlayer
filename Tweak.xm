@@ -205,38 +205,33 @@ UIButton *previousButton;
     SBWallpaperEffectView *topWallpaperEffectView = MSHookIvar<SBWallpaperEffectView *>(((SBReachabilityBackgroundView *)self.view), "_topWallpaperEffectView");
     
     if (topWallpaperEffectView != nil) {
-        newBGImageView = [[UIImageView alloc] initWithFrame:topWallpaperEffectView.bounds];
-        newBGImageView.contentMode = UIViewContentModeScaleAspectFill;
-        newBGImageView.hidden = YES;
-    if (enableBlur) {
-        newBGImageView.hidden = NO;
-    }
-    [topWallpaperEffectView addSubview:newBGImageView];
-    
-        newBGImageView.translatesAutoresizingMaskIntoConstraints = false;
-    [newBGImageView.bottomAnchor constraintEqualToAnchor:topWallpaperEffectView.bottomAnchor constant:0].active = YES;
-    [newBGImageView.leftAnchor constraintEqualToAnchor:topWallpaperEffectView.leftAnchor constant:0].active = YES;
-    [newBGImageView.rightAnchor constraintEqualToAnchor:topWallpaperEffectView.rightAnchor constant:0].active = YES;
-    [newBGImageView.topAnchor constraintEqualToAnchor:topWallpaperEffectView.topAnchor constant:0].active = YES;
-    
-    _UIBackdropViewSettings *settings = [_UIBackdropViewSettings settingsForStyle:2];
+        if (enableBlur) {
+            newBGImageView = [[UIImageView alloc] initWithFrame:topWallpaperEffectView.bounds];
+            newBGImageView.contentMode = UIViewContentModeScaleAspectFill;
+            newBGImageView.hidden = YES;
+            [topWallpaperEffectView addSubview:newBGImageView];
+        
+            newBGImageView.translatesAutoresizingMaskIntoConstraints = false;
+            [newBGImageView.bottomAnchor constraintEqualToAnchor:topWallpaperEffectView.bottomAnchor constant:0].active = YES;
+            [newBGImageView.leftAnchor constraintEqualToAnchor:topWallpaperEffectView.leftAnchor constant:0].active = YES;
+            [newBGImageView.rightAnchor constraintEqualToAnchor:topWallpaperEffectView.rightAnchor constant:0].active = YES;
+            [newBGImageView.topAnchor constraintEqualToAnchor:topWallpaperEffectView.topAnchor constant:0].active = YES;
+        
+            _UIBackdropViewSettings *settings = [_UIBackdropViewSettings settingsForStyle:2];
 
-    _UIBackdropView *blurView = [[_UIBackdropView alloc] initWithSettings:settings];
-    blurView.blurRadiusSetOnce = NO;
-    blurView._blurRadius = 200.0;
-    blurView._blurQuality = @"high";
-    blurView.hidden = YES;
-    if (enableBlur) {
-        blurView.hidden = NO;
-    }
-    blurView.frame = newBGImageView.frame;
-    [topWallpaperEffectView insertSubview:blurView aboveSubview:newBGImageView];
-    
-    blurView.translatesAutoresizingMaskIntoConstraints = false;
-    [blurView.bottomAnchor constraintEqualToAnchor:topWallpaperEffectView.bottomAnchor constant:0].active = YES;
-    [blurView.leftAnchor constraintEqualToAnchor:topWallpaperEffectView.leftAnchor constant:0].active = YES;
-    [blurView.rightAnchor constraintEqualToAnchor:topWallpaperEffectView.rightAnchor constant:0].active = YES;
-    [blurView.topAnchor constraintEqualToAnchor:topWallpaperEffectView.topAnchor constant:0].active = YES;
+            _UIBackdropView *blurView = [[_UIBackdropView alloc] initWithSettings:settings];
+            blurView.blurRadiusSetOnce = NO;
+            blurView._blurRadius = 200.0;
+            blurView._blurQuality = @"high";
+            blurView.frame = newBGImageView.frame;
+            [topWallpaperEffectView insertSubview:blurView aboveSubview:newBGImageView];
+        
+            blurView.translatesAutoresizingMaskIntoConstraints = false;
+            [blurView.bottomAnchor constraintEqualToAnchor:topWallpaperEffectView.bottomAnchor constant:0].active = YES;
+            [blurView.leftAnchor constraintEqualToAnchor:topWallpaperEffectView.leftAnchor constant:0].active = YES;
+            [blurView.rightAnchor constraintEqualToAnchor:topWallpaperEffectView.rightAnchor constant:0].active = YES;
+            [blurView.topAnchor constraintEqualToAnchor:topWallpaperEffectView.topAnchor constant:0].active = YES;
+        }
     
     artworkContainerView = [[ReachPlayerArtworkContainerView alloc] initWithFrame:CGRectMake(0,topWallpaperEffectView.center.y-positionY,artworkSize,artworkSize)];
     artworkContainerView.contentMode = UIViewContentModeScaleAspectFill;
@@ -408,8 +403,8 @@ UIButton *previousButton;
     [notificationCenter addObserver:self selector:@selector(updateImage:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
     [notificationCenter postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
         
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playingDidChange:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingApplicationIsPlayingDidChangeNotification object:nil];
-    [[NSNotificationCenter defaultCenter] postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingApplicationIsPlayingDidChangeNotification object:nil];
+    [notificationCenter addObserver:self selector:@selector(playingDidChange:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingApplicationIsPlayingDidChangeNotification object:nil];
+    [notificationCenter postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingApplicationIsPlayingDidChangeNotification object:nil];
         
     }
 }
