@@ -275,6 +275,7 @@ UIButton *previousButton;
     
         nowPlayingInfoSong.translatesAutoresizingMaskIntoConstraints = false;
     [nowPlayingInfoSong.widthAnchor constraintEqualToConstant:150].active = true;
+    [nowPlayingInfoSong.heightAnchor constraintEqualToConstant:22].active = true;
     [nowPlayingInfoSong.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
     [nowPlayingInfoSong.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-40].active = true;
     
@@ -298,6 +299,7 @@ UIButton *previousButton;
     
         nowPlayingInfoArtist.translatesAutoresizingMaskIntoConstraints = false;
     [nowPlayingInfoArtist.widthAnchor constraintEqualToConstant:150].active = true;
+    [nowPlayingInfoArtist.heightAnchor constraintEqualToConstant:22].active = true;
     [nowPlayingInfoArtist.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
     [nowPlayingInfoArtist.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-20].active = true;
     
@@ -321,6 +323,7 @@ UIButton *previousButton;
     
         nowPlayingInfoAlbum.translatesAutoresizingMaskIntoConstraints = false;
     [nowPlayingInfoAlbum.widthAnchor constraintEqualToConstant:150].active = true;
+    [nowPlayingInfoAlbum.heightAnchor constraintEqualToConstant:22].active = true;
     [nowPlayingInfoAlbum.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
     [nowPlayingInfoAlbum.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY].active = true;
         
