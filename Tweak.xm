@@ -5,25 +5,37 @@ ReachPlayerContainerView *containerView;
 
 %group ReachPlayer
 
-// tap to toggle
 %hook _UIStatusBarForegroundView
+// Double tap status bar to activate
 - (id)initWithFrame:(CGRect)frame {
     self = %orig;
-    
-    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleStatusReachability:)];
-    self.userInteractionEnabled = YES;
-    tapGesture.numberOfTapsRequired = 2;
-    [self addGestureRecognizer:tapGesture];
-    
+    if (activationStyle == 0) {
+        UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleStatusReachability:)];
+        self.userInteractionEnabled = YES;
+        tapGesture.numberOfTapsRequired = 2;
+        [self addGestureRecognizer:tapGesture];
+    }
     return self;
 }
 
 %new
 - (void)toggleStatusReachability:(id)sender {
-    if (enableTapToToggle) {
     [[%c(SBReachabilityManager) sharedInstance] toggleReachability];
+}
+%end
+
+%hook UIWindow
+// Shake device to activate
+- (void)motionEnded:(UIEventSubtype)motion withEvent:(UIEvent *)event {
+    %orig;
+    if (activationStyle == 1) {
+        BOOL isScreenOn = MSHookIvar<BOOL>([%c(SBLockScreenManager) sharedInstance], "_isScreenOn");
+        if (event.type == UIEventSubtypeMotionShake && self == [[UIApplication sharedApplication] keyWindow] && isScreenOn == YES) {
+            [[%c(SBReachabilityManager) sharedInstance] toggleReachability];
+        }
     }
 }
+
 %end
 
 %hook SBSearchScrollView
@@ -47,8 +59,7 @@ ReachPlayerContainerView *containerView;
 %hook SBReachabilitySettings
 // Sets the vertical offset
 - (void)setYOffsetFactor:(double)arg1 {
-    arg1 = reachOffset;
-    %orig;
+    %orig(reachOffset);
 }
 
 // Support for other devices
@@ -64,12 +75,12 @@ ReachPlayerContainerView *containerView;
 %end
 
 %hook SBReachabilityManager
--(void)_setKeepAliveTimer {
+//-(void)_setKeepAliveTimer {
     // remove orig timer
-}
+//}
 
 -(void)_pingKeepAliveWithDuration:(double)arg1 interactedBeforePing:(BOOL)arg2 initialKeepAliveTime:(double)arg3 {
-    // remove orig timer
+    %orig(keepAliveDuration,arg2,0.0);
 }
 
 // Support for other devices
@@ -177,17 +188,6 @@ ReachPlayerContainerView *containerView;
     [self addReachPlayerContainerView];
 }
 
-- (void)viewDidAppear:(BOOL)arg1 {
-    %orig;
-    self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:keepAliveDuration target:self selector:@selector(updateReachability) userInfo:nil repeats:NO];
-    [[NSRunLoop mainRunLoop] addTimer:self.updateTimer forMode:NSDefaultRunLoopMode];
-}
-
-- (void)viewDidDisappear:(BOOL)animated {
-    %orig;
-    [self.updateTimer invalidate];
-}
-
 %new
 - (void)addReachPlayerContainerView {
     SBWallpaperEffectView *topWallpaperEffectView = MSHookIvar<SBWallpaperEffectView *>(((SBReachabilityBackgroundView *)self.view), "_topWallpaperEffectView");
@@ -198,6 +198,9 @@ ReachPlayerContainerView *containerView;
         if (enableBlur) {
             containerView.backgroundImageView.hidden = NO;
             containerView.backgroundBlurView.hidden = NO;
+        } else {
+            containerView.backgroundImageView.hidden = YES;
+            containerView.backgroundBlurView.hidden = YES;
         }
         [topWallpaperEffectView addSubview:containerView];
         
@@ -208,13 +211,14 @@ ReachPlayerContainerView *containerView;
         [containerView.topAnchor constraintEqualToAnchor:topWallpaperEffectView.topAnchor constant:0].active = YES;
     }
 }
-
+/*
 %new
 - (void)updateReachability {
     if ([[%c(SBReachabilityManager) sharedInstance] reachabilityModeActive] == YES) {
     [[%c(SBReachabilityManager) sharedInstance] toggleReachability];
     }
 }
+*/
 %end
 
 %hook SpringBoard

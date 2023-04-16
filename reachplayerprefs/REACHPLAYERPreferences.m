@@ -6,6 +6,7 @@ static NSString *preferencesNotification = @"com.nahtedetihw.reachplayerprefs/Re
 
 #define bundlePath ([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/PreferenceBundles/reachplayerprefs.bundle/"] ? @"/Library/PreferenceBundles/reachplayerprefs.bundle/" : @"/var/jb/Library/PreferenceBundles/reachplayerprefs.bundle/")
 
+UIBarButtonItem *changelogButtonItem;
 UIBarButtonItem *respringButtonItem;
 UIBarButtonItem *twitterButtonItem;
 UIBarButtonItem *paypalButtonItem;
@@ -32,7 +33,7 @@ UIViewController *popController;
     self = [super init];
 
     if (self) {
-
+        
         UIButton *respringButton =  [UIButton buttonWithType:UIButtonTypeCustom];
         respringButton.frame = CGRectMake(0,0,30,30);
         respringButton.layer.cornerRadius = respringButton.frame.size.height / 2;
@@ -43,6 +44,17 @@ UIViewController *popController;
         respringButton.tintColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
         
         respringButtonItem = [[UIBarButtonItem alloc] initWithCustomView:respringButton];
+        
+        UIButton *changelogButton =  [UIButton buttonWithType:UIButtonTypeCustom];
+        changelogButton.frame = CGRectMake(0,0,30,30);
+        changelogButton.layer.cornerRadius = changelogButton.frame.size.height / 2;
+        changelogButton.layer.masksToBounds = YES;
+        changelogButton.backgroundColor = [UIColor colorWithRed:72/255.0f green:97/255.0f blue:112/255.0f alpha:1.0f];
+        [changelogButton setImage:[[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"%@CHANGELOG.png", bundlePath]] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+        [changelogButton addTarget:self action:@selector(showMenu:) forControlEvents:UIControlEventTouchUpInside];
+        changelogButton.tintColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
+        
+        changelogButtonItem = [[UIBarButtonItem alloc] initWithCustomView:changelogButton];
         
         UIButton *twitterButton =  [UIButton buttonWithType:UIButtonTypeCustom];
         twitterButton.frame = CGRectMake(0,0,30,30);
@@ -67,7 +79,7 @@ UIViewController *popController;
         paypalButtonItem = [[UIBarButtonItem alloc] initWithCustomView:paypalButton];
         
         NSArray *rightButtons;
-        rightButtons = @[respringButtonItem, twitterButtonItem, paypalButtonItem];
+        rightButtons = @[respringButtonItem, changelogButtonItem, twitterButtonItem, paypalButtonItem];
         self.navigationItem.rightBarButtonItems = rightButtons;
         self.navigationItem.titleView = [UIView new];
         self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 10, 10)];
@@ -129,10 +141,16 @@ UIViewController *popController;
 - (void)viewDidLoad {
 
     [super viewDidLoad];
+    
+    self.view.tintColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
+    [[UIApplication sharedApplication] keyWindow].tintColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
+
+    self.navigationController.navigationController.navigationBar.tintColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
+    self.navigationController.navigationController.navigationBar.translucent = YES;
 
     self.headerView = [[UIView alloc] initWithFrame:CGRectMake(0,0,200,200)];
     self.headerImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0,0,200,200)];
-    self.headerImageView.contentMode = UIViewContentModeScaleAspectFill;
+    self.headerImageView.contentMode = UIViewContentModeScaleAspectFit;
     self.headerImageView.image = [UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"%@banner.png", bundlePath]];
     self.headerImageView.translatesAutoresizingMaskIntoConstraints = NO;
 
@@ -241,6 +259,33 @@ UIViewController *popController;
 
 }
 
+
+- (void)showMenu:(id)sender {
+    
+    AudioServicesPlaySystemSound(1519);
+
+    self.changelogController = [[OBWelcomeController alloc] initWithTitle:@"ReachPlayer" detailText:@"2.4" icon:[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"%@changelogControllerIcon.png", bundlePath]]];
+
+    [self.changelogController addBulletedListItemWithTitle:@"Preferences" description:@"Rewrote the preferences to make it easier to find stuff." image:[UIImage systemImageNamed:@"1.circle.fill"]];
+    
+    [self.changelogController addBulletedListItemWithTitle:@"Activation" description:@"Added an option to activate by shaking the device." image:[UIImage systemImageNamed:@"2.circle.fill"]];
+    
+    [self.changelogController addBulletedListItemWithTitle:@"Background" description:@"Added more background blur styles." image:[UIImage systemImageNamed:@"3.circle.fill"]];
+    
+    [self.changelogController addBulletedListItemWithTitle:@"Timer" description:@"Fixed an issue with the timeout duration not working correctly." image:[UIImage systemImageNamed:@"4.circle.fill"]];
+
+    self.changelogController.viewIfLoaded.backgroundColor = [UIColor systemBackgroundColor];
+    for (OBBulletedListItem *item in self.changelogController.bulletedList.items) {
+        item.imageView.tintColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
+    }
+    self.changelogController.modalPresentationStyle = UIModalPresentationPageSheet;
+    self.changelogController.modalInPresentation = NO;
+    [self presentViewController:self.changelogController animated:YES completion:nil];
+}
+- (void)dismissVC {
+    [self.changelogController dismissViewControllerAnimated:YES completion:nil];
+}
+
 - (void)twitter:(id)sender {
     AudioServicesPlaySystemSound(1519);
     
@@ -273,4 +318,125 @@ UIViewController *popController;
     [popController dismissViewControllerAnimated:YES completion:nil];
 }
 
+@end
+
+@implementation REACHPLAYERACTIVATIONPreferencesListController
+- (NSArray *)specifiers {
+    if (!_specifiers) {
+        _specifiers = [self loadSpecifiersFromPlistName:@"ACTIVATION" target:self];
+    }
+
+    return _specifiers;
+}
+
+- (UITableViewStyle)tableViewStyle {
+    return UITableViewStyleInsetGrouped;
+}
+
+-(id)readPreferenceValue: (PSSpecifier *)specifier {
+    NSMutableDictionary *settings = [NSMutableDictionary dictionary];
+    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    return settings [specifier.properties[@"key"]] ?: specifier.properties[@"default"];
+}
+
+-(void)setPreferenceValue:(id)value specifier: (PSSpecifier *)specifier {
+    NSMutableDictionary *settings = [NSMutableDictionary dictionary];
+    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings setObject:value forKey:specifier.properties [@"key"]];
+    [settings writeToFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" atomically:YES];
+    [super setPreferenceValue:value specifier :specifier];
+    
+    CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)preferencesNotification, NULL, NULL, TRUE);
+}
+@end
+
+
+@implementation REACHPLAYERLAYOUTPreferencesListController
+- (NSArray *)specifiers {
+    if (!_specifiers) {
+        _specifiers = [self loadSpecifiersFromPlistName:@"LAYOUT" target:self];
+    }
+
+    return _specifiers;
+}
+
+- (UITableViewStyle)tableViewStyle {
+    return UITableViewStyleInsetGrouped;
+}
+
+-(id)readPreferenceValue: (PSSpecifier *)specifier {
+    NSMutableDictionary *settings = [NSMutableDictionary dictionary];
+    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    return settings [specifier.properties[@"key"]] ?: specifier.properties[@"default"];
+}
+
+-(void)setPreferenceValue:(id)value specifier: (PSSpecifier *)specifier {
+    NSMutableDictionary *settings = [NSMutableDictionary dictionary];
+    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings setObject:value forKey:specifier.properties [@"key"]];
+    [settings writeToFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" atomically:YES];
+    [super setPreferenceValue:value specifier :specifier];
+    
+    CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)preferencesNotification, NULL, NULL, TRUE);
+}
+@end
+
+@implementation REACHPLAYERBACKGROUNDPreferencesListController
+- (NSArray *)specifiers {
+    if (!_specifiers) {
+        _specifiers = [self loadSpecifiersFromPlistName:@"BACKGROUND" target:self];
+    }
+
+    return _specifiers;
+}
+
+- (UITableViewStyle)tableViewStyle {
+    return UITableViewStyleInsetGrouped;
+}
+
+-(id)readPreferenceValue: (PSSpecifier *)specifier {
+    NSMutableDictionary *settings = [NSMutableDictionary dictionary];
+    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    return settings [specifier.properties[@"key"]] ?: specifier.properties[@"default"];
+}
+
+-(void)setPreferenceValue:(id)value specifier: (PSSpecifier *)specifier {
+    NSMutableDictionary *settings = [NSMutableDictionary dictionary];
+    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings setObject:value forKey:specifier.properties [@"key"]];
+    [settings writeToFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" atomically:YES];
+    [super setPreferenceValue:value specifier :specifier];
+    
+    CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)preferencesNotification, NULL, NULL, TRUE);
+}
+@end
+
+@implementation REACHPLAYERMISCPreferencesListController
+- (NSArray *)specifiers {
+    if (!_specifiers) {
+        _specifiers = [self loadSpecifiersFromPlistName:@"MISC" target:self];
+    }
+
+    return _specifiers;
+}
+
+- (UITableViewStyle)tableViewStyle {
+    return UITableViewStyleInsetGrouped;
+}
+
+-(id)readPreferenceValue: (PSSpecifier *)specifier {
+    NSMutableDictionary *settings = [NSMutableDictionary dictionary];
+    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    return settings [specifier.properties[@"key"]] ?: specifier.properties[@"default"];
+}
+
+-(void)setPreferenceValue:(id)value specifier: (PSSpecifier *)specifier {
+    NSMutableDictionary *settings = [NSMutableDictionary dictionary];
+    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings setObject:value forKey:specifier.properties [@"key"]];
+    [settings writeToFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" atomically:YES];
+    [super setPreferenceValue:value specifier :specifier];
+    
+    CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)preferencesNotification, NULL, NULL, TRUE);
+}
 @end

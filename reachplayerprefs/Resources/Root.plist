@@ -6,12 +6,6 @@
 	<array>
 		<dict>
 			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>Respring only required to enable/disable and change reachability height</string>
-		</dict>
-		<dict>
-			<key>cell</key>
 			<string>PSSwitchCell</string>
 			<key>default</key>
 			<false/>
@@ -23,238 +17,88 @@
 			<string>Enable</string>
 			<key>PostNotification</key>
 			<string>com.nahtedetihw.reachplayerprefs/ReloadPrefs</string>
+			<key>icon</key>
+			<string>ENABLE.png</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Blurred Background</string>
+			<string></string>
 		</dict>
 		<dict>
 			<key>cell</key>
-			<string>PSSwitchCell</string>
+			<string>PSLinkListCell</string>
 			<key>default</key>
-			<false/>
+			<string></string>
+			<key>detail</key>
+			<string>REACHPLAYERACTIVATIONPreferencesListController</string>
 			<key>defaults</key>
 			<string>com.nahtedetihw.reachplayerprefs</string>
-			<key>key</key>
-			<string>enableBlur</string>
 			<key>label</key>
-			<string>Enable Blur</string>
-			<key>PostNotification</key>
-			<string>com.nahtedetihw.reachplayerprefs/ReloadPrefs</string>
+			<string>Activation</string>
+			<key>icon</key>
+			<string>ACTIVATION.png</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Status Bar</string>
+			<string></string>
 		</dict>
 		<dict>
 			<key>cell</key>
-			<string>PSSwitchCell</string>
+			<string>PSLinkListCell</string>
 			<key>default</key>
-			<false/>
+			<string></string>
+			<key>detail</key>
+			<string>REACHPLAYERLAYOUTPreferencesListController</string>
 			<key>defaults</key>
 			<string>com.nahtedetihw.reachplayerprefs</string>
-			<key>key</key>
-			<string>enableTapToToggle</string>
-			<key>label</key>
-			<string>Double Tap To Toggle</string>
-			<key>PostNotification</key>
-			<string>com.nahtedetihw.reachplayerprefs/ReloadPrefs</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
 			<key>label</key>
 			<string>Layout</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSSegmentCell</string>
-			<key>default</key>
-			<string>0</string>
-			<key>defaults</key>
-			<string>com.nahtedetihw.reachplayerprefs</string>
-			<key>key</key>
-			<string>layoutStyle</string>
-			<key>validValues</key>
-			<array>
-				<string>0</string>
-				<string>1</string>
-			</array>
-			<key>validTitles</key>
-			<array>
-				<string>Side-by-side</string>
-				<string>Centered</string>
-			</array>
-			<key>alignment</key>
-			<string>1</string>
-			<key>PostNotification</key>
-			<string>com.nahtedetihw.reachplayerprefs/ReloadPrefs</string>
+			<key>icon</key>
+			<string>LAYOUT.png</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Reachability Height</string>
+			<string></string>
 		</dict>
 		<dict>
 			<key>cell</key>
-			<string>PSSliderCell</string>
+			<string>PSLinkListCell</string>
 			<key>default</key>
-			<real>0.4</real>
+			<string></string>
+			<key>detail</key>
+			<string>REACHPLAYERBACKGROUNDPreferencesListController</string>
 			<key>defaults</key>
 			<string>com.nahtedetihw.reachplayerprefs</string>
-			<key>key</key>
-			<string>reachOffset</string>
-			<key>max</key>
-			<real>0.75</real>
-			<key>min</key>
-			<integer>0</integer>
-			<key>isSegmented</key>
-			<false/>
-			<key>showValue</key>
-			<true/>
-			<key>PostNotification</key>
-			<string>com.nahtedetihw.reachplayerprefs/ReloadPrefs</string>
+			<key>label</key>
+			<string>Background</string>
+			<key>icon</key>
+			<string>BACKGROUND.png</string>
 		</dict>
 		<dict>
 			<key>cell</key>
 			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Chevron Transparency</string>
+			<string></string>
 		</dict>
 		<dict>
 			<key>cell</key>
-			<string>PSSliderCell</string>
+			<string>PSLinkListCell</string>
 			<key>default</key>
-			<integer>1</integer>
+			<string></string>
+			<key>detail</key>
+			<string>REACHPLAYERMISCPreferencesListController</string>
 			<key>defaults</key>
 			<string>com.nahtedetihw.reachplayerprefs</string>
-			<key>key</key>
-			<string>chevronOpacity</string>
-			<key>max</key>
-			<real>1</real>
-			<key>min</key>
-			<integer>0</integer>
-			<key>isSegmented</key>
-			<false/>
-			<key>showValue</key>
-			<true/>
-			<key>PostNotification</key>
-			<string>com.nahtedetihw.reachplayerprefs/ReloadPrefs</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
 			<key>label</key>
-			<string>Artwork Size</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSSliderCell</string>
-			<key>default</key>
-			<integer>180</integer>
-			<key>defaults</key>
-			<string>com.nahtedetihw.reachplayerprefs</string>
-			<key>key</key>
-			<string>artworkSize</string>
-			<key>max</key>
-			<integer>200</integer>
-			<key>min</key>
-			<integer>50</integer>
-			<key>isSegmented</key>
-			<true/>
-			<key>showValue</key>
-			<true/>
-			<key>PostNotification</key>
-			<string>com.nahtedetihw.reachplayerprefs/ReloadPrefs</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>Position Horizontal</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSSliderCell</string>
-			<key>default</key>
-			<integer>0</integer>
-			<key>defaults</key>
-			<string>com.nahtedetihw.reachplayerprefs</string>
-			<key>key</key>
-			<string>positionX</string>
-			<key>max</key>
-			<integer>100</integer>
-			<key>min</key>
-			<integer>-100</integer>
-			<key>isSegmented</key>
-			<true/>
-			<key>showValue</key>
-			<true/>
-			<key>PostNotification</key>
-			<string>com.nahtedetihw.reachplayerprefs/ReloadPrefs</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>Position Vertical</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSSliderCell</string>
-			<key>default</key>
-			<integer>0</integer>
-			<key>defaults</key>
-			<string>com.nahtedetihw.reachplayerprefs</string>
-			<key>key</key>
-			<string>positionY</string>
-			<key>max</key>
-			<integer>150</integer>
-			<key>min</key>
-			<integer>-150</integer>
-			<key>isSegmented</key>
-			<true/>
-			<key>showValue</key>
-			<true/>
-			<key>PostNotification</key>
-			<string>com.nahtedetihw.reachplayerprefs/ReloadPrefs</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>Timeout Duration (seconds)</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSSliderCell</string>
-			<key>default</key>
-			<integer>8</integer>
-			<key>defaults</key>
-			<string>com.nahtedetihw.reachplayerprefs</string>
-			<key>key</key>
-			<string>keepAliveDuration</string>
-			<key>max</key>
-			<integer>120</integer>
-			<key>min</key>
-			<integer>1</integer>
-			<key>isSegmented</key>
-			<true/>
-			<key>showValue</key>
-			<true/>
-			<key>PostNotification</key>
-			<string>com.nahtedetihw.reachplayerprefs/ReloadPrefs</string>
-		</dict>
-		<dict>
-			<key>cell</key>
-			<string>PSGroupCell</string>
-			<key>label</key>
-			<string>Reachability will stay open for the above number of seconds you choose</string>
+			<string>Misc</string>
+			<key>icon</key>
+			<string>MISC.png</string>
 		</dict>
 		<dict>
 			<key>cell</key>

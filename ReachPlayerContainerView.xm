@@ -41,7 +41,14 @@
 }
 
 - (void)addBackgroundBlur {
-    _UIBackdropViewSettings *settings = [_UIBackdropViewSettings settingsForStyle:4005];
+    _UIBackdropViewSettings *settings;
+    if (blurStyleRP == 0) {
+        settings = [_UIBackdropViewSettings settingsForStyle:4005];
+    } else if (blurStyleRP == 1) {
+        settings = [_UIBackdropViewSettings settingsForStyle:2];
+    } else if (blurStyleRP == 2) {
+        settings = [_UIBackdropViewSettings settingsForStyle:4000];
+    }
     
     self.backgroundBlurView = [[_UIBackdropView alloc] initWithSettings:settings];
     self.backgroundBlurView.frame = self.backgroundImageView.frame;
@@ -59,7 +66,7 @@
     self.artworkContainerView.contentMode = UIViewContentModeScaleAspectFill;
     self.artworkContainerView.layer.masksToBounds = YES;
     self.artworkContainerView.layer.cornerCurve = kCACornerCurveContinuous;
-    self.artworkContainerView.layer.cornerRadius = self.artworkContainerView.frame.size.height/8;
+    self.artworkContainerView.layer.cornerRadius = self.artworkContainerView.frame.size.height/16;
     [self addSubview:self.artworkContainerView];
     
     self.artworkContainerView.translatesAutoresizingMaskIntoConstraints = false;
@@ -77,7 +84,7 @@
     self.artworkContainerView.artworkView.contentMode = UIViewContentModeScaleAspectFill;
     self.artworkContainerView.artworkView.layer.masksToBounds = YES;
     self.artworkContainerView.artworkView.layer.cornerCurve = kCACornerCurveContinuous;
-    self.artworkContainerView.artworkView.layer.cornerRadius = self.artworkContainerView.frame.size.height/8;
+    self.artworkContainerView.artworkView.layer.cornerRadius = self.artworkContainerView.frame.size.height/16;
     [self.artworkContainerView insertSubview:self.artworkContainerView.artworkView atIndex:1];
     
     self.artworkContainerView.artworkView.translatesAutoresizingMaskIntoConstraints = false;
@@ -98,7 +105,11 @@
     }
     self.nowPlayingInfoSong.font = [UIFont boldSystemFontOfSize:20];
     self.nowPlayingInfoSong.frame = CGRectMake(0, 0, 150, 20);
-    self.nowPlayingInfoSong.textColor = [UIColor whiteColor];
+    if (blurStyleRP == 2) {
+        self.nowPlayingInfoSong.textColor = [UIColor blackColor];
+    } else {
+        self.nowPlayingInfoSong.textColor = [UIColor whiteColor];
+    }
     self.nowPlayingInfoSong.clipsToBounds = NO;
     self.nowPlayingInfoSong.isAccessibilityElement = YES;
     self.nowPlayingInfoSong.accessibilityHint = @"Name of the currently playing song.";
@@ -121,7 +132,11 @@
     self.nowPlayingInfoArtist.font = [UIFont boldSystemFontOfSize:14];
     self.nowPlayingInfoArtist.frame = CGRectMake(0, 0, 150, 20);
     self.nowPlayingInfoArtist.alpha = 0.6;
-    self.nowPlayingInfoArtist.textColor = [UIColor whiteColor];
+    if (blurStyleRP == 2) {
+        self.nowPlayingInfoArtist.textColor = [UIColor blackColor];
+    } else {
+        self.nowPlayingInfoArtist.textColor = [UIColor whiteColor];
+    }
     self.nowPlayingInfoArtist.clipsToBounds = NO;
     self.nowPlayingInfoArtist.isAccessibilityElement = YES;
     self.nowPlayingInfoArtist.accessibilityHint = @"Name of the currently playing artist.";
@@ -144,7 +159,11 @@
     self.nowPlayingInfoAlbum.font = [UIFont systemFontOfSize:14];
     self.nowPlayingInfoAlbum.frame = CGRectMake(0, 0, 150, 20);
     self.nowPlayingInfoAlbum.alpha = 0.2;
-    self.nowPlayingInfoAlbum.textColor = [UIColor whiteColor];
+    if (blurStyleRP == 2) {
+        self.nowPlayingInfoAlbum.textColor = [UIColor blackColor];
+    } else {
+        self.nowPlayingInfoAlbum.textColor = [UIColor whiteColor];
+    }
     self.nowPlayingInfoAlbum.clipsToBounds = NO;
     self.nowPlayingInfoAlbum.isAccessibilityElement = YES;
     self.nowPlayingInfoAlbum.accessibilityHint = @"Name of the currently playing album.";
@@ -164,7 +183,6 @@
     self.labelsStackView.distribution = UIStackViewDistributionEqualSpacing;
     self.labelsStackView.spacing = 5;
     self.labelsStackView.layoutMarginsRelativeArrangement = YES;
-    //self.labelsStackView.layoutMargins = UIEdgeInsetsMake(0,25,0,10);
     [self addNowPlayingInfoSong];
     [self addNowPlayingInfoArtist];
     [self addNowPlayingInfoAlbum];
@@ -187,7 +205,11 @@
     self.previousButton.frame = CGRectMake(0, 0, 27, 12);
     [self.previousButton setTitle:@"" forState:UIControlStateNormal];
     [self.previousButton setImage:[[UIImage systemImageNamed:@"backward.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-    self.previousButton.tintColor = [UIColor whiteColor];
+    if (blurStyleRP == 2) {
+        self.previousButton.tintColor = [UIColor blackColor];
+    } else {
+        self.previousButton.tintColor = [UIColor whiteColor];
+    }
     [self.previousButton addTarget:self
                             action:@selector(previous)
                   forControlEvents:UIControlEventTouchUpInside];
@@ -208,7 +230,11 @@
     self.playPauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
     [self.playPauseButton setTitle:@"" forState:UIControlStateNormal];
     self.playPauseButton.frame = CGRectMake(0, 0, 20, 23);
-    self.playPauseButton.tintColor = [UIColor whiteColor];
+    if (blurStyleRP == 2) {
+        self.playPauseButton.tintColor = [UIColor blackColor];
+    } else {
+        self.playPauseButton.tintColor = [UIColor whiteColor];
+    }
     
     [self.playPauseButton addTarget:self
                              action:@selector(playPause)
@@ -231,7 +257,11 @@
     self.nextButton.frame = CGRectMake(0, 0, 27, 12);
     [self.nextButton setTitle:@"" forState:UIControlStateNormal];
     [self.nextButton setImage:[[UIImage systemImageNamed:@"forward.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-    self.nextButton.tintColor = [UIColor whiteColor];
+    if (blurStyleRP == 2) {
+        self.nextButton.tintColor = [UIColor blackColor];
+    } else {
+        self.nextButton.tintColor = [UIColor whiteColor];
+    }
     [self.nextButton addTarget:self
                         action:@selector(next)
               forControlEvents:UIControlEventTouchUpInside];
@@ -257,7 +287,6 @@
     self.controlsStackView.distribution = UIStackViewDistributionEqualSpacing;
     self.controlsStackView.spacing = 25;
     self.controlsStackView.layoutMarginsRelativeArrangement = YES;
-    //self.controlsStackView.layoutMargins = UIEdgeInsetsMake(0,25,0,10);
     self.controlsStackView.translatesAutoresizingMaskIntoConstraints = false;
     [self addPreviousButton];
     [self addPlayPauseButton];

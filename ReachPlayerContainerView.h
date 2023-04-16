@@ -7,7 +7,7 @@ static NSString *preferencesNotification = @"com.nahtedetihw.reachplayerprefs/Re
 #define bundlePath ([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/PreferenceBundles/reachplayerprefs.bundle/"] ? @"/Library/PreferenceBundles/reachplayerprefs.bundle/" : @"/var/jb/Library/PreferenceBundles/reachplayerprefs.bundle/")
 
 double positionXRP, positionYRP, artworkSizeRP, reachOffsetRP;
-NSInteger layoutStyleRP;
+NSInteger layoutStyleRP, blurStyleRP;
 
 static void loadPreferences() {
     NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"];
@@ -17,6 +17,7 @@ static void loadPreferences() {
     artworkSizeRP = dict[@"artworkSize"] ? [dict[@"artworkSize"] doubleValue] : 160.0;
     
     layoutStyleRP = dict[@"layoutStyle"] ? [dict[@"layoutStyle"] integerValue] : 0;
+    blurStyleRP = dict[@"blurStyle"] ? [dict[@"blurStyle"] integerValue] : 0;
 }
 
 @interface _UIBackdropView : UIView

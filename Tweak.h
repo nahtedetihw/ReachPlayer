@@ -2,16 +2,15 @@
 
 static NSString *preferencesNotification = @"com.nahtedetihw.reachplayerprefs/ReloadPrefs";
 
-BOOL enable, enableBlur, enableTapToToggle;
+BOOL enable, enableBlur;
 double chevronOpacity, keepAliveDuration, positionX, positionY, artworkSize, reachOffset;
-NSInteger layoutStyle;
+NSInteger layoutStyle, blurStyle, activationStyle;
 
 static void loadPreferences() {
     NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"];
     
     enable = dict[@"enable"] ? [dict[@"enable"] boolValue] : NO;
     enableBlur = dict[@"enableBlur"] ? [dict[@"enableBlur"] boolValue] : NO;
-    enableTapToToggle = dict[@"enableTapToToggle"] ? [dict[@"enableTapToToggle"] boolValue] : NO;
     
     chevronOpacity = dict[@"chevronOpacity"] ? [dict[@"chevronOpacity"] doubleValue] : 1.0;
     keepAliveDuration = dict[@"keepAliveDuration"] ? [dict[@"keepAliveDuration"] doubleValue] : 0.8;
@@ -21,7 +20,14 @@ static void loadPreferences() {
     reachOffset = dict[@"reachOffset"] ? [dict[@"reachOffset"] doubleValue] : 0.4;
     
     layoutStyle = dict[@"layoutStyle"] ? [dict[@"layoutStyle"] integerValue] : 0;
+    blurStyle = dict[@"blurStyle"] ? [dict[@"blurStyle"] integerValue] : 0;
+    activationStyle = dict[@"activationStyle"] ? [dict[@"activationStyle"] integerValue] : 0;
 }
+
+@interface SBLockScreenManager : NSObject
++(id)sharedInstance;
+-(BOOL)isScreenOn;
+@end
 
 @interface _UIBackdropView : UIView
 @property (assign,nonatomic) BOOL blurRadiusSetOnce;

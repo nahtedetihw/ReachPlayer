@@ -12,7 +12,7 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = ReachPlayer
 
 ReachPlayer_FILES = Tweak.xm ReachPlayerContainerView.xm
-ReachPlayer_CFLAGS = -fobjc-arc
+ReachPlayer_CFLAGS = -fobjc-arc -Wdeprecated-declarations -Wno-deprecated-declarations
 ReachPlayer_PRIVATE_FRAMEWORKS = MediaRemote
 
 include $(THEOS_MAKE_PATH)/tweak.mk
