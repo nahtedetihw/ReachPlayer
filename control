@@ -1,9 +1,9 @@
 Package: com.nahtedetihw.reachplayer
 Name: ReachPlayer
-Version: 2.2
+Version: 2.4
 Architecture: iphoneos-arm
 Description: Now Playing info in Reachability Window!
 Maintainer: Ethan Whited
 Author: Ethan Whited
 Section: Tweaks
-Depends: mobilesubstrate, ws.hbang.common
+Depends: mobilesubstrate

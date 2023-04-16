@@ -1,12 +1,13 @@
 #import <Preferences/PSListController.h>
 #import <Preferences/PSSpecifier.h>
-#import <CepheiPrefs/HBRootListController.h>
-#import <CepheiPrefs/HBAppearanceSettings.h>
 #import <spawn.h>
-#import <SparkColourPickerUtils.h>
-#import <SparkColourPickerView.h>
 
-@interface REACHPLAYERPreferencesListController : HBRootListController<UIPopoverPresentationControllerDelegate> {
+@interface UIPopoverPresentationController (Private)
+@property (assign,setter=_setPopoverBackgroundStyle:,nonatomic) long long _popoverBackgroundStyle;
+@property (assign,setter=_setBackgroundBlurDisabled:,nonatomic) BOOL _backgroundBlurDisabled;
+@end
+
+@interface REACHPLAYERPreferencesListController : PSListController<UIPopoverPresentationControllerDelegate> {
 
     UITableView * _table;
 
@@ -17,11 +18,9 @@
 @property (nonatomic, retain) UILabel *titleLabel;
 @property (nonatomic, retain) UIImageView *iconView;
 @property (nonatomic, retain) NSArray *versionArray;
-- (void)handleYesGesture:(UIButton *)sender;
+- (void)apply:(UIButton *)sender;
+- (void)twitter:(UIButton *)sender;
+- (void)paypal:(UIButton *)sender;
+- (void)handleYesGesture;
 - (void)handleNoGesture:(UIButton *)sender;
-- (void)addAnimation;
-@end
-
-@interface REACHPLAYERAppearanceSettings: HBAppearanceSettings
-
 @end

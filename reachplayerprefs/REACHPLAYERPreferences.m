@@ -1,13 +1,15 @@
-#include "REACHPLAYERPreferences.h"
+#import <Foundation/Foundation.h>
+#import "REACHPLAYERPreferences.h"
 #import <AudioToolbox/AudioServices.h>
-#import <Cephei/HBPreferences.h>
+
+static NSString *preferencesNotification = @"com.nahtedetihw.reachplayerprefs/ReloadPrefs";
+
+#define bundlePath ([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/PreferenceBundles/reachplayerprefs.bundle/"] ? @"/Library/PreferenceBundles/reachplayerprefs.bundle/" : @"/var/jb/Library/PreferenceBundles/reachplayerprefs.bundle/")
 
 UIBarButtonItem *respringButtonItem;
 UIBarButtonItem *twitterButtonItem;
+UIBarButtonItem *paypalButtonItem;
 UIViewController *popController;
-
-CAGradientLayer *gradient1;
-UIView *gradientView1;
 
 @implementation REACHPLAYERPreferencesListController
 @synthesize killButton;
@@ -15,10 +17,14 @@ UIView *gradientView1;
 
 - (NSArray *)specifiers {
     if (!_specifiers) {
-        _specifiers = [[self loadSpecifiersFromPlistName:@"Root" target:self] retain];
+        _specifiers = [self loadSpecifiersFromPlistName:@"Root" target:self];
     }
 
     return _specifiers;
+}
+
+- (UITableViewStyle)tableViewStyle {
+    return UITableViewStyleInsetGrouped;
 }
 
 - (instancetype)init {
@@ -26,18 +32,15 @@ UIView *gradientView1;
     self = [super init];
 
     if (self) {
-        
-        REACHPLAYERAppearanceSettings *appearanceSettings = [[REACHPLAYERAppearanceSettings alloc] init];
-        self.hb_appearanceSettings = appearanceSettings;
-        
+
         UIButton *respringButton =  [UIButton buttonWithType:UIButtonTypeCustom];
         respringButton.frame = CGRectMake(0,0,30,30);
         respringButton.layer.cornerRadius = respringButton.frame.size.height / 2;
         respringButton.layer.masksToBounds = YES;
-        respringButton.backgroundColor = [UIColor colorWithRed:60/255.0f green:83/255.0f blue:103/255.0f alpha:1.0f];
-        [respringButton setImage:[UIImage systemImageNamed:@"checkmark.circle"] forState:UIControlStateNormal];
+        respringButton.backgroundColor = [UIColor colorWithRed:72/255.0f green:97/255.0f blue:112/255.0f alpha:1.0f];
+        [respringButton setImage:[[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"%@CHECKMARK.png", bundlePath]] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
         [respringButton addTarget:self action:@selector(apply:) forControlEvents:UIControlEventTouchUpInside];
-        respringButton.tintColor = [UIColor colorWithRed:109/255.0f green:133/255.0f blue:143/255.0f alpha:1.0f];
+        respringButton.tintColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
         
         respringButtonItem = [[UIBarButtonItem alloc] initWithCustomView:respringButton];
         
@@ -45,28 +48,39 @@ UIView *gradientView1;
         twitterButton.frame = CGRectMake(0,0,30,30);
         twitterButton.layer.cornerRadius = twitterButton.frame.size.height / 2;
         twitterButton.layer.masksToBounds = YES;
-        twitterButton.backgroundColor = [UIColor colorWithRed:60/255.0f green:83/255.0f blue:103/255.0f alpha:1.0f];
-        [twitterButton setImage:[UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/reachplayerprefs.bundle/twitter.png"] forState:UIControlStateNormal];
+        twitterButton.backgroundColor = [UIColor colorWithRed:72/255.0f green:97/255.0f blue:112/255.0f alpha:1.0f];
+        [twitterButton setImage:[[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"%@TWITTER.png", bundlePath]] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
         [twitterButton addTarget:self action:@selector(twitter:) forControlEvents:UIControlEventTouchUpInside];
-        twitterButton.tintColor = [UIColor colorWithRed:109/255.0f green:133/255.0f blue:143/255.0f alpha:1.0f];
+        twitterButton.tintColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
         
         twitterButtonItem = [[UIBarButtonItem alloc] initWithCustomView:twitterButton];
         
+        UIButton *paypalButton =  [UIButton buttonWithType:UIButtonTypeCustom];
+        paypalButton.frame = CGRectMake(0,0,30,30);
+        paypalButton.layer.cornerRadius = paypalButton.frame.size.height / 2;
+        paypalButton.layer.masksToBounds = YES;
+        paypalButton.backgroundColor = [UIColor colorWithRed:72/255.0f green:97/255.0f blue:112/255.0f alpha:1.0f];
+        [paypalButton setImage:[[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"%@PAYPAL.png", bundlePath]] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
+        [paypalButton addTarget:self action:@selector(paypal:) forControlEvents:UIControlEventTouchUpInside];
+        paypalButton.tintColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
+        
+        paypalButtonItem = [[UIBarButtonItem alloc] initWithCustomView:paypalButton];
+        
         NSArray *rightButtons;
-        rightButtons = @[respringButtonItem, twitterButtonItem];
+        rightButtons = @[respringButtonItem, twitterButtonItem, paypalButtonItem];
         self.navigationItem.rightBarButtonItems = rightButtons;
         self.navigationItem.titleView = [UIView new];
         self.titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 10, 10)];
         self.titleLabel.font = [UIFont boldSystemFontOfSize:18];
         self.titleLabel.translatesAutoresizingMaskIntoConstraints = NO;
         self.titleLabel.text = @"";
-        self.titleLabel.textColor = [UIColor whiteColor];
+        self.titleLabel.textColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
         self.titleLabel.textAlignment = NSTextAlignmentCenter;
         [self.navigationItem.titleView addSubview:self.titleLabel];
 
         self.iconView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 10, 10)];
         self.iconView.contentMode = UIViewContentModeScaleAspectFit;
-        self.iconView.image = [UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/reachplayerprefs.bundle/icon.png"];
+        self.iconView.image = [UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"%@icon.png", bundlePath]];
         self.iconView.translatesAutoresizingMaskIntoConstraints = NO;
         self.iconView.alpha = 0.0;
         [self.navigationItem.titleView addSubview:self.iconView];
@@ -96,16 +110,15 @@ UIView *gradientView1;
 - (void)viewWillAppear:(BOOL)animated {
 
     [super viewWillAppear:animated];
+    
+    self.view.tintColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
+    [[UIApplication sharedApplication] keyWindow].tintColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
 
     CGRect frame = self.table.bounds;
     frame.origin.y = -frame.size.height;
 
-    self.navigationController.navigationController.navigationBar.barTintColor = [UIColor colorWithRed:109/255.0f green:133/255.0f blue:143/255.0f alpha:1.0f];
-    [self.navigationController.navigationController.navigationBar setShadowImage: [UIImage new]];
-    self.navigationController.navigationController.navigationBar.tintColor = [UIColor whiteColor];
-    self.navigationController.navigationController.navigationBar.translucent = NO;
-
-    [self addAnimation];
+    self.navigationController.navigationController.navigationBar.tintColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
+    self.navigationController.navigationController.navigationBar.translucent = YES;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -118,75 +131,31 @@ UIView *gradientView1;
     [super viewDidLoad];
 
     self.headerView = [[UIView alloc] initWithFrame:CGRectMake(0,0,200,200)];
-    UIColor *topGradient = [UIColor colorWithRed:109/255.0f green:133/255.0f blue:143/255.0f alpha:1.0f];
-    UIColor *bottomGradient = [UIColor colorWithRed:60/255.0f green:83/255.0f blue:103/255.0f alpha:1.0f];
-    
-    gradientView1 = [[UIView alloc] initWithFrame:self.headerView.bounds];
-    gradientView1.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-    gradientView1.contentMode = UIViewContentModeScaleAspectFill;
-    gradientView1.clipsToBounds = NO;
+    self.headerImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0,0,200,200)];
+    self.headerImageView.contentMode = UIViewContentModeScaleAspectFill;
+    self.headerImageView.image = [UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"%@banner.png", bundlePath]];
+    self.headerImageView.translatesAutoresizingMaskIntoConstraints = NO;
 
-    gradient1 = [CAGradientLayer layer];
-    gradient1.frame = self.headerView.bounds;
-    gradient1.masksToBounds = YES;
-    gradient1.needsDisplayOnBoundsChange = YES;
-    gradient1.colors = [NSArray arrayWithObjects:(id)topGradient.CGColor, (id)bottomGradient.CGColor, nil];
-    gradient1.startPoint = CGPointMake(0.0,0.5);
-    gradient1.endPoint = CGPointMake(1.0,0.5);
-    gradient1.locations = @[@1, @0];
-    gradient1.transform = CATransform3DMakeScale(4, 1, 1);
-    
-    UIImage *gradientMaskImage = [UIImage imageWithContentsOfFile:@"/Library/PreferenceBundles/reachplayerprefs.bundle/banner.png"];
-    UIImageView *gradientMaskView = [[UIImageView alloc] initWithFrame:CGRectMake(gradientView1.center.x,0,gradientView1.frame.size.width,gradientView1.frame.size.height)];
-    gradientMaskView.image = gradientMaskImage;
-    gradientMaskView.contentMode = UIViewContentModeScaleAspectFill;
-    gradientView1.maskView = gradientMaskView;
-    gradientView1.center = self.headerView.center;
-    [gradientView1.layer insertSublayer:gradient1 atIndex:0];
-    [self.headerView insertSubview:gradientView1 atIndex:0];
-
-    //constraints boiiiis
-    gradientView1.translatesAutoresizingMaskIntoConstraints = false;
+    [self.headerView addSubview:self.headerImageView];
     [NSLayoutConstraint activateConstraints:@[
-        [gradientView1.topAnchor constraintEqualToAnchor:self.headerView.topAnchor],
-        [gradientView1.leadingAnchor constraintEqualToAnchor:self.headerView.leadingAnchor],
-        [gradientView1.trailingAnchor constraintEqualToAnchor:self.headerView.trailingAnchor],
-        [gradientView1.bottomAnchor constraintEqualToAnchor:self.headerView.bottomAnchor],
+        [self.headerImageView.topAnchor constraintEqualToAnchor:self.headerView.topAnchor],
+        [self.headerImageView.leadingAnchor constraintEqualToAnchor:self.headerView.leadingAnchor],
+        [self.headerImageView.trailingAnchor constraintEqualToAnchor:self.headerView.trailingAnchor],
+        [self.headerImageView.bottomAnchor constraintEqualToAnchor:self.headerView.bottomAnchor],
     ]];
 
     _table.tableHeaderView = self.headerView;
     
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                                 selector:@selector(addAnimation)
-                                                     name:UIApplicationWillEnterForegroundNotification object:nil];
-    /*
-    NSTimer *updateTimer = [NSTimer scheduledTimerWithTimeInterval:0.001 target:self selector:@selector(addAnimation) userInfo:nil repeats:YES];
-    [[NSRunLoop mainRunLoop] addTimer:updateTimer forMode:NSDefaultRunLoopMode];
-    */
-    [self addAnimation];
+                                             selector:@selector(handleNoGesture:)
+                                                     name:UIApplicationDidEnterBackgroundNotification object:nil];
 
-}
-- (void)addAnimation {
-    UIColor *topGradient = [UIColor colorWithRed:109/255.0f green:133/255.0f blue:143/255.0f alpha:1.0f];
-    UIColor *bottomGradient = [UIColor colorWithRed:60/255.0f green:83/255.0f blue:103/255.0f alpha:1.0f];
-    
-    const CFTimeInterval duration = 5;
-    
-    CABasicAnimation *gradientAnimation = [CABasicAnimation animation];
-    gradientAnimation.keyPath = @"colors";
-    gradientAnimation.fromValue = @[(id)topGradient.CGColor,(id)bottomGradient.CGColor];
-    gradientAnimation.toValue = @[(id)bottomGradient.CGColor,(id)topGradient.CGColor];
-    gradientAnimation.duration = duration;
-    gradientAnimation.repeatCount = INFINITY;
-    gradientAnimation.autoreverses = YES;
-
-    [gradient1 addAnimation:gradientAnimation forKey:@"chatAnimation"];
 }
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     CGFloat offsetY = scrollView.contentOffset.y;
 
-    if (offsetY > 200) {
+    if (offsetY > 40) {
         [UIView animateWithDuration:0.2 animations:^{
             self.iconView.alpha = 1.0;
             self.titleLabel.alpha = 0.0;
@@ -199,13 +168,29 @@ UIView *gradientView1;
     }
 
     if (offsetY > 0) offsetY = 0;
-    self.headerImageView.frame = CGRectMake(0, offsetY, self.headerView.frame.size.width, 200 - offsetY);
+    self.headerImageView.frame = CGRectMake(self.headerView.frame.origin.x, self.headerView.frame.origin.y, self.headerView.frame.size.width, 200 - offsetY);
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
     [super viewWillDisappear:animated];
 
     [self.navigationController.navigationController.navigationBar setTitleTextAttributes:@{NSForegroundColorAttributeName : [UIColor blackColor]}];
+}
+
+-(id)readPreferenceValue: (PSSpecifier *)specifier {
+    NSMutableDictionary *settings = [NSMutableDictionary dictionary];
+    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    return settings [specifier.properties[@"key"]] ?: specifier.properties[@"default"];
+}
+
+-(void)setPreferenceValue:(id)value specifier: (PSSpecifier *)specifier {
+    NSMutableDictionary *settings = [NSMutableDictionary dictionary];
+    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings setObject:value forKey:specifier.properties [@"key"]];
+    [settings writeToFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" atomically:YES];
+    [super setPreferenceValue:value specifier :specifier];
+    
+    CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)preferencesNotification, NULL, NULL, TRUE);
 }
 
 - (void)apply:(UIButton *)sender {
@@ -219,16 +204,17 @@ UIView *gradientView1;
     respringLabel.textAlignment = NSTextAlignmentCenter;
     respringLabel.adjustsFontSizeToFitWidth = YES;
     respringLabel.font = [UIFont boldSystemFontOfSize:20];
-    respringLabel.textColor = [UIColor labelColor];
+    respringLabel.textColor = [UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f];
     respringLabel.text = @"Are you sure you want to respring?";
     [popController.view addSubview:respringLabel];
     
     UIButton *yesButton = [UIButton buttonWithType:UIButtonTypeCustom];
     [yesButton addTarget:self
-                  action:@selector(handleYesGesture:)
+                  action:@selector(handleYesGesture)
      forControlEvents:UIControlEventTouchUpInside];
     [yesButton setTitle:@"Yes" forState:UIControlStateNormal];
-    [yesButton setTitleColor:[UIColor labelColor] forState:UIControlStateNormal];
+    yesButton.titleLabel.font = [UIFont boldSystemFontOfSize:20];
+    [yesButton setTitleColor:[UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f] forState:UIControlStateNormal];
     yesButton.frame = CGRectMake(100, 100, 100, 30);
     [popController.view addSubview:yesButton];
     
@@ -237,14 +223,17 @@ UIView *gradientView1;
                   action:@selector(handleNoGesture:)
      forControlEvents:UIControlEventTouchUpInside];
     [noButton setTitle:@"No" forState:UIControlStateNormal];
-    [noButton setTitleColor:[UIColor labelColor] forState:UIControlStateNormal];
+    noButton.titleLabel.font = [UIFont boldSystemFontOfSize:20];
+    [noButton setTitleColor:[UIColor colorWithRed:121/255.0f green:145/255.0f blue:153/255.0f alpha:1.0f] forState:UIControlStateNormal];
     noButton.frame = CGRectMake(0, 100, 100, 30);
     [popController.view addSubview:noButton];
      
     UIPopoverPresentationController *popover = popController.popoverPresentationController;
     popover.delegate = self;
+    //[popover _setBackgroundBlurDisabled:YES];
     popover.permittedArrowDirections = UIPopoverArrowDirectionUp;
     popover.barButtonItem = respringButtonItem;
+    popover.backgroundColor = [UIColor colorWithRed:72/255.0f green:97/255.0f blue:112/255.0f alpha:1.0f];
     
     [self presentViewController:popController animated:YES completion:nil];
     
@@ -253,38 +242,35 @@ UIView *gradientView1;
 }
 
 - (void)twitter:(id)sender {
+    AudioServicesPlaySystemSound(1519);
+    
     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://twitter.com/EthanWhited"] options:@{} completionHandler:nil];
 }
 
-- (void)handleYesGesture:(UIButton *)sender {
-    AudioServicesPlaySystemSound(1521);
+- (void)paypal:(id)sender {
+    AudioServicesPlaySystemSound(1519);
+    
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://paypal.me/nahtedetihw"] options:@{} completionHandler:nil];
+}
 
+- (void)handleYesGesture {
+    AudioServicesPlaySystemSound(1519);
+
+    [popController dismissViewControllerAnimated:YES completion:nil];
+    
     pid_t pid;
     const char* args[] = {"killall", "SpringBoard", NULL};
-    posix_spawn(&pid, "/usr/bin/killall", NULL, NULL, (char* const*)args, NULL);
+    if ([[NSFileManager defaultManager] fileExistsAtPath:@"/usr/bin/killall"]) {
+        posix_spawn(&pid, "usr/bin/killall", NULL, NULL, (char* const*)args, NULL);
+    } else {
+        posix_spawn(&pid, "/var/jb/usr/bin/killall", NULL, NULL, (char* const*)args, NULL);
+    }
+    
+    CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)preferencesNotification, NULL, NULL, TRUE);
 }
 
 - (void)handleNoGesture:(UIButton *)sender {
     [popController dismissViewControllerAnimated:YES completion:nil];
 }
-
-@end
-
-
-
-@implementation REACHPLAYERAppearanceSettings: HBAppearanceSettings
-
-- (UIColor *)tintColor {
-
-    return [UIColor colorWithRed:109/255.0f green:133/255.0f blue:143/255.0f alpha:1.0f];
-
-}
-
-- (UIColor *)tableViewCellSeparatorColor {
-
-    return [UIColor clearColor];
-
-}
-
 
 @end

@@ -1,29 +1,27 @@
-#import <AudioToolbox/AudioServices.h>
-#import "MediaRemote.h"
-#import "CBAutoScrollLabel.h"
-#import <Cephei/HBPreferences.h>
+#import <UIKit/UIKit.h>
 
-@interface SBWallpaperEffectView : UIVisualEffectView
-@end
+static NSString *preferencesNotification = @"com.nahtedetihw.reachplayerprefs/ReloadPrefs";
 
-@interface SBReachabilityBackgroundView : UIView
-@end
+BOOL enable, enableBlur, enableTapToToggle;
+double chevronOpacity, keepAliveDuration, positionX, positionY, artworkSize, reachOffset;
+NSInteger layoutStyle;
 
-@interface SBReachabilityBackgroundViewController : UIViewController
-- (UIColor *)getAverageColorFrom:(UIImage *)image withAlpha:(double)alpha;
-- (UIColor *)lightDarkFromColor:(UIColor*)color;
-- (void)updateImage:(NSNotification *)notification;
-- (void)updateReachability;
-- (void)updateTransition;
-- (void)playPause;
-- (void)next;
-- (void)previous;
-- (void)playingDidChange:(NSNotification *)notification;
-@end
-
-@interface UIColor (Private)
--(BOOL)_isSimilarToColor:(id)arg1 withinPercentage:(double)arg2 ;
-@end
+static void loadPreferences() {
+    NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"];
+    
+    enable = dict[@"enable"] ? [dict[@"enable"] boolValue] : NO;
+    enableBlur = dict[@"enableBlur"] ? [dict[@"enableBlur"] boolValue] : NO;
+    enableTapToToggle = dict[@"enableTapToToggle"] ? [dict[@"enableTapToToggle"] boolValue] : NO;
+    
+    chevronOpacity = dict[@"chevronOpacity"] ? [dict[@"chevronOpacity"] doubleValue] : 1.0;
+    keepAliveDuration = dict[@"keepAliveDuration"] ? [dict[@"keepAliveDuration"] doubleValue] : 0.8;
+    positionX = dict[@"positionX"] ? [dict[@"positionX"] doubleValue] : 0;
+    positionY = dict[@"positionY"] ? [dict[@"positionY"] doubleValue] : 0;
+    artworkSize = dict[@"artworkSize"] ? [dict[@"artworkSize"] doubleValue] : 160.0;
+    reachOffset = dict[@"reachOffset"] ? [dict[@"reachOffset"] doubleValue] : 0.4;
+    
+    layoutStyle = dict[@"layoutStyle"] ? [dict[@"layoutStyle"] integerValue] : 0;
+}
 
 @interface _UIBackdropView : UIView
 @property (assign,nonatomic) BOOL blurRadiusSetOnce;
@@ -37,11 +35,44 @@
 +(id)settingsForStyle:(long long)arg1 ;
 @end
 
+@interface ReachPlayerArtworkContainerView : UIView
+@property (nonatomic, strong) UIImageView *artworkView;
+@end
+
+@interface ReachPlayerContainerView : UIView
+@property (nonatomic, retain) UIImageView *backgroundImageView;
+@property (nonatomic, retain) _UIBackdropView *backgroundBlurView;
+@property (nonatomic, retain) ReachPlayerArtworkContainerView *artworkContainerView;
+@property (nonatomic, retain) UILabel *nowPlayingInfoSong;
+@property (nonatomic, retain) UILabel *nowPlayingInfoArtist;
+@property (nonatomic, retain) UILabel *nowPlayingInfoAlbum;
+@property (nonatomic, retain) UIButton *playPauseButton;
+@property (nonatomic, retain) UIButton *nextButton;
+@property (nonatomic, retain) UIButton *previousButton;
+@end
+
+@interface SBWallpaperEffectView : UIVisualEffectView
+@end
+
+@interface SBReachabilityBackgroundView : UIView
+@end
+
+@interface SBReachabilityBackgroundViewController : UIViewController
+@property (nonatomic, retain) NSTimer *updateTimer;
+- (void)updateReachability;
+- (void)addReachPlayerContainerView;
+@end
+
+@interface UIColor (Private)
+-(BOOL)_isSimilarToColor:(id)arg1 withinPercentage:(double)arg2 ;
+@end
+
 @interface SBReachabilityManager : NSObject
 -(void)_setKeepAliveTimer;
 +(id)sharedInstance;
 -(void)toggleReachability;
 -(BOOL)reachabilityModeActive;
+-(void)deactivateReachability;
 @end
 
 @interface SBMediaController

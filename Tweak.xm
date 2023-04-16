@@ -1,33 +1,7 @@
 #import "Tweak.h"
 
-HBPreferences *preferences;
-BOOL enable;
-BOOL enableBlur;
-BOOL enableTapToToggle;
-double chevronOpacity;
-double keepAliveDuration;
-double positionX;
-double positionY;
-double artworkSize;
-double reachOffset;
-
-@interface ReachPlayerArtworkContainerView : UIView
-@property (nonatomic, strong) UIImageView *artworkView;
-@end
-
-@implementation ReachPlayerArtworkContainerView
-@end
-
 UIView *emptyView;
-UIImageView *newBGImageView;
-ReachPlayerArtworkContainerView *artworkContainerView;
-CBAutoScrollLabel *nowPlayingInfoSong;
-CBAutoScrollLabel *nowPlayingInfoArtist;
-CBAutoScrollLabel *nowPlayingInfoAlbum;
-NSTimer *updateTimer;
-UIButton *playPauseButton;
-UIButton *nextButton;
-UIButton *previousButton;
+ReachPlayerContainerView *containerView;
 
 %group ReachPlayer
 
@@ -197,258 +171,42 @@ UIButton *previousButton;
 %end
 
 %hook SBReachabilityBackgroundViewController
-- (void)viewWillAppear:(BOOL)animated {
+%property (nonatomic, retain) NSTimer *updateTimer;
+-(void)viewWillAppear:(BOOL)arg1 {
     %orig;
-    
-    SBWallpaperEffectView *topWallpaperEffectView = MSHookIvar<SBWallpaperEffectView *>(((SBReachabilityBackgroundView *)self.view), "_topWallpaperEffectView");
-    
-    if (topWallpaperEffectView != nil) {
-        newBGImageView = [[UIImageView alloc] initWithFrame:topWallpaperEffectView.bounds];
-        newBGImageView.contentMode = UIViewContentModeScaleAspectFill;
-        newBGImageView.hidden = YES;
-    if (enableBlur) {
-        newBGImageView.hidden = NO;
-    }
-    [topWallpaperEffectView addSubview:newBGImageView];
-    
-        newBGImageView.translatesAutoresizingMaskIntoConstraints = false;
-    [newBGImageView.bottomAnchor constraintEqualToAnchor:topWallpaperEffectView.bottomAnchor constant:0].active = YES;
-    [newBGImageView.leftAnchor constraintEqualToAnchor:topWallpaperEffectView.leftAnchor constant:0].active = YES;
-    [newBGImageView.rightAnchor constraintEqualToAnchor:topWallpaperEffectView.rightAnchor constant:0].active = YES;
-    [newBGImageView.topAnchor constraintEqualToAnchor:topWallpaperEffectView.topAnchor constant:0].active = YES;
-    
-    _UIBackdropViewSettings *settings = [_UIBackdropViewSettings settingsForStyle:2];
-
-    _UIBackdropView *blurView = [[_UIBackdropView alloc] initWithSettings:settings];
-    blurView.blurRadiusSetOnce = NO;
-    blurView._blurRadius = 200.0;
-    blurView._blurQuality = @"high";
-    blurView.hidden = YES;
-    if (enableBlur) {
-        blurView.hidden = NO;
-    }
-    blurView.frame = newBGImageView.frame;
-    [topWallpaperEffectView insertSubview:blurView aboveSubview:newBGImageView];
-    
-    blurView.translatesAutoresizingMaskIntoConstraints = false;
-    [blurView.bottomAnchor constraintEqualToAnchor:topWallpaperEffectView.bottomAnchor constant:0].active = YES;
-    [blurView.leftAnchor constraintEqualToAnchor:topWallpaperEffectView.leftAnchor constant:0].active = YES;
-    [blurView.rightAnchor constraintEqualToAnchor:topWallpaperEffectView.rightAnchor constant:0].active = YES;
-    [blurView.topAnchor constraintEqualToAnchor:topWallpaperEffectView.topAnchor constant:0].active = YES;
-    
-    artworkContainerView = [[ReachPlayerArtworkContainerView alloc] initWithFrame:CGRectMake(0,topWallpaperEffectView.center.y-positionY,artworkSize,artworkSize)];
-    artworkContainerView.contentMode = UIViewContentModeScaleAspectFill;
-    artworkContainerView.layer.masksToBounds = YES;
-    artworkContainerView.layer.cornerRadius = artworkContainerView.frame.size.height/8;
-    [topWallpaperEffectView addSubview:artworkContainerView];
-    
-    artworkContainerView.translatesAutoresizingMaskIntoConstraints = false;
-    [artworkContainerView.widthAnchor constraintEqualToConstant:artworkSize].active = true;
-    [artworkContainerView.heightAnchor constraintEqualToConstant:artworkSize].active = true;
-    [artworkContainerView.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX].active = true;
-    [artworkContainerView.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-10].active = true;
-        
-    artworkContainerView.artworkView = [[UIImageView alloc] initWithFrame:CGRectMake(0,topWallpaperEffectView.center.y-positionY,artworkSize,artworkSize)];
-    artworkContainerView.artworkView.contentMode = UIViewContentModeScaleAspectFill;
-    artworkContainerView.artworkView.layer.masksToBounds = YES;
-    artworkContainerView.artworkView.layer.cornerRadius = artworkContainerView.frame.size.height/8;
-    [artworkContainerView insertSubview:artworkContainerView.artworkView atIndex:1];
-        
-    artworkContainerView.artworkView.translatesAutoresizingMaskIntoConstraints = false;
-    [artworkContainerView.artworkView.widthAnchor constraintEqualToConstant:artworkSize].active = true;
-    [artworkContainerView.artworkView.heightAnchor constraintEqualToConstant:artworkSize].active = true;
-    [artworkContainerView.artworkView.centerXAnchor constraintEqualToAnchor:artworkContainerView.centerXAnchor constant:0].active = true;
-    [artworkContainerView.artworkView.centerYAnchor constraintEqualToAnchor:artworkContainerView.centerYAnchor constant:0].active = true;
-    
-    nowPlayingInfoSong = [[CBAutoScrollLabel alloc] init];
-    nowPlayingInfoSong.textAlignment = NSTextAlignmentLeft;
-    nowPlayingInfoSong.font = [UIFont boldSystemFontOfSize:20];
-    nowPlayingInfoSong.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY-25, 150, 20);
-    if (artworkContainerView.artworkView.image != nil) {
-        nowPlayingInfoSong.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
-    } else {
-        nowPlayingInfoSong.textColor = [UIColor labelColor];
-    }
-        nowPlayingInfoSong.clipsToBounds = NO;
-        nowPlayingInfoSong.isAccessibilityElement = YES;
-        nowPlayingInfoSong.accessibilityHint = @"Name of the currently playing song.";
-    [topWallpaperEffectView addSubview:nowPlayingInfoSong];
-    
-        nowPlayingInfoSong.translatesAutoresizingMaskIntoConstraints = false;
-    [nowPlayingInfoSong.widthAnchor constraintEqualToConstant:150].active = true;
-    [nowPlayingInfoSong.heightAnchor constraintEqualToConstant:20].active = true;
-    [nowPlayingInfoSong.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
-    [nowPlayingInfoSong.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-40].active = true;
-    
-    
-        nowPlayingInfoArtist = [[CBAutoScrollLabel alloc] init];
-        nowPlayingInfoArtist.textAlignment = NSTextAlignmentLeft;
-        nowPlayingInfoArtist.font = [UIFont boldSystemFontOfSize:14];
-        nowPlayingInfoArtist.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 150, 20);
-        nowPlayingInfoArtist.alpha = 0.6;
-    if (artworkContainerView.artworkView.image != nil) {
-        nowPlayingInfoArtist.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
-    } else {
-        nowPlayingInfoArtist.textColor = [UIColor labelColor];
-    }
-        nowPlayingInfoArtist.clipsToBounds = NO;
-        nowPlayingInfoArtist.isAccessibilityElement = YES;
-        nowPlayingInfoArtist.accessibilityHint = @"Name of the currently playing artist.";
-    [topWallpaperEffectView addSubview:nowPlayingInfoArtist];
-    
-        nowPlayingInfoArtist.translatesAutoresizingMaskIntoConstraints = false;
-    [nowPlayingInfoArtist.widthAnchor constraintEqualToConstant:150].active = true;
-    [nowPlayingInfoArtist.heightAnchor constraintEqualToConstant:20].active = true;
-    [nowPlayingInfoArtist.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
-    [nowPlayingInfoArtist.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY-20].active = true;
-    
-    
-        nowPlayingInfoAlbum = [[CBAutoScrollLabel alloc] init];
-        nowPlayingInfoAlbum.textAlignment = NSTextAlignmentLeft;
-        nowPlayingInfoAlbum.font = [UIFont systemFontOfSize:14];
-        nowPlayingInfoAlbum.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY+25, 150, 20);
-        nowPlayingInfoAlbum.alpha = 0.2;
-    if (artworkContainerView.artworkView.image != nil) {
-        nowPlayingInfoAlbum.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
-    } else {
-        nowPlayingInfoAlbum.textColor = [UIColor labelColor];
-    }
-        nowPlayingInfoAlbum.clipsToBounds = NO;
-        nowPlayingInfoAlbum.isAccessibilityElement = YES;
-        nowPlayingInfoAlbum.accessibilityHint = @"Name of the currently playing album.";
-    [topWallpaperEffectView addSubview:nowPlayingInfoAlbum];
-    
-        nowPlayingInfoAlbum.translatesAutoresizingMaskIntoConstraints = false;
-    [nowPlayingInfoAlbum.widthAnchor constraintEqualToConstant:150].active = true;
-    [nowPlayingInfoAlbum.heightAnchor constraintEqualToConstant:20].active = true;
-    [nowPlayingInfoAlbum.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
-    [nowPlayingInfoAlbum.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY].active = true;
-        
-        playPauseButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    [playPauseButton setTitle:@"" forState:UIControlStateNormal];
-        playPauseButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 20, 25);
-    if (artworkContainerView.artworkView.image != nil) {
-        playPauseButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
-    } else {
-        playPauseButton.tintColor = [UIColor labelColor];
-    }
-        
-    [playPauseButton addTarget:self
-                  action:@selector(playPause)
-        forControlEvents:UIControlEventTouchUpInside];
-        playPauseButton.isAccessibilityElement = YES;
-        playPauseButton.accessibilityHint = @"Play Pause Song Button.";
-    [topWallpaperEffectView addSubview:playPauseButton];
-        
-        playPauseButton.translatesAutoresizingMaskIntoConstraints = false;
-    [playPauseButton.widthAnchor constraintEqualToConstant:20].active = true;
-    [playPauseButton.heightAnchor constraintEqualToConstant:25].active = true;
-    [playPauseButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170].active = true;
-    [playPauseButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
-        
-    nextButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    nextButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 20, 20);
-    [nextButton setTitle:@"" forState:UIControlStateNormal];
-    [nextButton setImage:[[UIImage systemImageNamed:@"forward.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-    if (artworkContainerView.artworkView.image != nil) {
-        nextButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
-    } else {
-        nextButton.tintColor = [UIColor labelColor];
-    }
-    [nextButton addTarget:self
-                      action:@selector(next)
-            forControlEvents:UIControlEventTouchUpInside];
-    nextButton.isAccessibilityElement = YES;
-    nextButton.accessibilityHint = @"Next Song Button.";
-    [topWallpaperEffectView addSubview:nextButton];
-        
-    nextButton.translatesAutoresizingMaskIntoConstraints = false;
-    [nextButton.widthAnchor constraintEqualToConstant:20].active = true;
-    [nextButton.heightAnchor constraintEqualToConstant:20].active = true;
-    [nextButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170+50].active = true;
-    [nextButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
-        
-    previousButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    previousButton.frame = CGRectMake(topWallpaperEffectView.frame.size.width, topWallpaperEffectView.center.y-positionY, 20, 20);
-    [previousButton setTitle:@"" forState:UIControlStateNormal];
-    [previousButton setImage:[[UIImage systemImageNamed:@"backward.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-    if (artworkContainerView.artworkView.image != nil) {
-        previousButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
-    } else {
-        previousButton.tintColor = [UIColor labelColor];
-    }
-    [previousButton addTarget:self
-                  action:@selector(previous)
-        forControlEvents:UIControlEventTouchUpInside];
-    previousButton.isAccessibilityElement = YES;
-    previousButton.accessibilityHint = @"Next Song Button.";
-    [topWallpaperEffectView addSubview:previousButton];
-        
-    previousButton.translatesAutoresizingMaskIntoConstraints = false;
-    [previousButton.widthAnchor constraintEqualToConstant:20].active = true;
-    [previousButton.heightAnchor constraintEqualToConstant:20].active = true;
-    [previousButton.centerXAnchor constraintEqualToAnchor:topWallpaperEffectView.centerXAnchor constant:-positionX+170-50].active = true;
-    [previousButton.centerYAnchor constraintEqualToAnchor:topWallpaperEffectView.centerYAnchor constant:positionY+30].active = true;
-    
-        artworkContainerView.artworkView.hidden = YES;
-        newBGImageView.hidden = YES;
-        nowPlayingInfoSong.hidden = YES;
-        nowPlayingInfoArtist.hidden = YES;
-        nowPlayingInfoAlbum.hidden = YES;
-        playPauseButton.hidden = YES;
-        nextButton.hidden = YES;
-        previousButton.hidden = YES;
-        
-    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    [notificationCenter addObserver:self selector:@selector(updateImage:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
-    [notificationCenter postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoDidChangeNotification object:nil];
-        
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playingDidChange:) name:(__bridge NSString *)kMRMediaRemoteNowPlayingApplicationPlaybackStateDidChangeNotification object:nil];
-    [[NSNotificationCenter defaultCenter] postNotificationName:(__bridge NSString *)kMRMediaRemoteNowPlayingApplicationPlaybackStateDidChangeNotification object:nil];
-        
-    }
+    [self addReachPlayerContainerView];
 }
 
-- (void)viewDidLoad {
+- (void)viewDidAppear:(BOOL)arg1 {
     %orig;
-    
-    if ([[%c(SBReachabilityManager) sharedInstance] reachabilityModeActive] == YES) {
-        updateTimer = [NSTimer scheduledTimerWithTimeInterval:keepAliveDuration target:self selector:@selector(updateReachability) userInfo:nil repeats:NO];
-        [[NSRunLoop mainRunLoop] addTimer:updateTimer forMode:NSDefaultRunLoopMode];
-        }
-}
-
-%new
-- (void)playingDidChange:(NSNotification *)notification {
-    MRMediaRemoteGetNowPlayingApplicationIsPlaying(dispatch_get_main_queue(), ^(Boolean isPlayingNow){
-            if (isPlayingNow == YES) {
-                [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"pause.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-            } else {
-                [playPauseButton setBackgroundImage:[[UIImage systemImageNamed:@"play.fill"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateNormal];
-            }
-        });
-}
-
-%new
-- (void)updateTransition {
-    CATransition *transition = [CATransition animation];
-    transition.duration = 1.0f;
-    transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-    transition.type = kCATransitionFade;
-
-    [artworkContainerView.artworkView.layer addAnimation:transition forKey:nil];
-    
-    CATransition *transitionBG = [CATransition animation];
-    transitionBG.duration = 1.0f;
-    transitionBG.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
-    transitionBG.type = kCATransitionFade;
-
-    [newBGImageView.layer addAnimation:transitionBG forKey:nil];
+    self.updateTimer = [NSTimer scheduledTimerWithTimeInterval:keepAliveDuration target:self selector:@selector(updateReachability) userInfo:nil repeats:NO];
+    [[NSRunLoop mainRunLoop] addTimer:self.updateTimer forMode:NSDefaultRunLoopMode];
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
     %orig;
-    [updateTimer invalidate];
+    [self.updateTimer invalidate];
+}
+
+%new
+- (void)addReachPlayerContainerView {
+    SBWallpaperEffectView *topWallpaperEffectView = MSHookIvar<SBWallpaperEffectView *>(((SBReachabilityBackgroundView *)self.view), "_topWallpaperEffectView");
+    
+    if (topWallpaperEffectView != nil) {
+        containerView = [ReachPlayerContainerView new];
+        containerView.frame = topWallpaperEffectView.bounds;
+        if (enableBlur) {
+            containerView.backgroundImageView.hidden = NO;
+            containerView.backgroundBlurView.hidden = NO;
+        }
+        [topWallpaperEffectView addSubview:containerView];
+        
+        containerView.translatesAutoresizingMaskIntoConstraints = false;
+        [containerView.bottomAnchor constraintEqualToAnchor:topWallpaperEffectView.bottomAnchor constant:0].active = YES;
+        [containerView.leftAnchor constraintEqualToAnchor:topWallpaperEffectView.leftAnchor constant:0].active = YES;
+        [containerView.rightAnchor constraintEqualToAnchor:topWallpaperEffectView.rightAnchor constant:0].active = YES;
+        [containerView.topAnchor constraintEqualToAnchor:topWallpaperEffectView.topAnchor constant:0].active = YES;
+    }
 }
 
 %new
@@ -457,158 +215,12 @@ UIButton *previousButton;
     [[%c(SBReachabilityManager) sharedInstance] toggleReachability];
     }
 }
+%end
 
-%new
-- (void)playPause {
-    MRMediaRemoteSendCommand(kMRTogglePlayPause, nil);
-    NSLog(@"ReachPlayer DEBUG: %@", @"PlayPause");
-
-    AudioServicesPlaySystemSound(1519);
-}
-
-%new
--(void)next {
-    MRMediaRemoteSendCommand(kMRNextTrack, nil);
-    NSLog(@"ReachPlayer DEBUG: %@", @"Next");
-    AudioServicesPlaySystemSound(1519);
-}
-
-%new
--(void)previous {
-    MRMediaRemoteSendCommand(kMRPreviousTrack, nil);
-    NSLog(@"ReachPlayer DEBUG: %@", @"Previous");
-    AudioServicesPlaySystemSound(1519);
-}
-
-%new
-- (void)updateImage:(NSNotification *)notification {
-    MRMediaRemoteGetNowPlayingInfo(dispatch_get_main_queue(), ^(CFDictionaryRef result) {
-        
-        if (result) {
-
-        NSDictionary *dictionary = (__bridge NSDictionary *)result;
-        
-        NSString *songName = dictionary[(__bridge NSString *)kMRMediaRemoteNowPlayingInfoTitle];
-
-        NSString *artistName = dictionary[(__bridge NSString *)kMRMediaRemoteNowPlayingInfoArtist];
-          
-        NSString *albumName = dictionary[(__bridge NSString *)kMRMediaRemoteNowPlayingInfoAlbum];
-
-        NSData *artworkData = [dictionary objectForKey:(__bridge NSString *)kMRMediaRemoteNowPlayingInfoArtworkData];
-
-        if (artworkData != nil) {
-            artworkContainerView.artworkView.image = [UIImage imageWithData:artworkData];
-            newBGImageView.image = [UIImage imageWithData:artworkData];
-        } else {
-            artworkContainerView.artworkView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
-            newBGImageView.image = [UIImage imageWithContentsOfFile:@"/Library/Application Support/reachplayer/DefaultContainerArtwork.png"];
-        }
-            
-            if (songName != nil) {
-                nowPlayingInfoSong.text = [NSString stringWithFormat:@"%@", songName];
-                nowPlayingInfoSong.accessibilityLabel = [NSString stringWithFormat:@"%@", songName];
-            } else {
-                nowPlayingInfoSong.text = @" ";
-                nowPlayingInfoSong.accessibilityLabel = @" ";
-            }
-            
-            if (artistName != nil) {
-                nowPlayingInfoArtist.text = [NSString stringWithFormat:@"%@", artistName];
-                nowPlayingInfoArtist.accessibilityLabel = [NSString stringWithFormat:@"%@", songName];
-            } else {
-                nowPlayingInfoArtist.text = @" ";
-                nowPlayingInfoArtist.accessibilityLabel = @" ";
-            }
-              
-            if (albumName != nil) {
-                nowPlayingInfoAlbum.text = [NSString stringWithFormat:@"%@", albumName];
-                nowPlayingInfoAlbum.accessibilityLabel = [NSString stringWithFormat:@"%@", songName];
-            } else {
-                nowPlayingInfoAlbum.text = @" ";
-                nowPlayingInfoAlbum.accessibilityLabel = @" ";
-            }
-            
-            if (enableBlur) {
-                newBGImageView.hidden = NO;
-            }
-            
-            artworkContainerView.artworkView.hidden = NO;
-            nowPlayingInfoSong.hidden = NO;
-            nowPlayingInfoArtist.hidden = NO;
-            nowPlayingInfoAlbum.hidden = NO;
-            playPauseButton.hidden = NO;
-            nextButton.hidden = NO;
-            previousButton.hidden = NO;
-            
-            nowPlayingInfoSong.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
-            nowPlayingInfoArtist.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
-            nowPlayingInfoAlbum.textColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
-            playPauseButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
-            nextButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
-            previousButton.tintColor = [self lightDarkFromColor:[self getAverageColorFrom:artworkContainerView.artworkView.image withAlpha:1]];
-
-        } else {
-            if (enableBlur) {
-                newBGImageView.hidden = YES;
-            }
-            artworkContainerView.artworkView.hidden = YES;
-            nowPlayingInfoSong.hidden = YES;
-            nowPlayingInfoArtist.hidden = YES;
-            nowPlayingInfoAlbum.hidden = YES;
-            playPauseButton.hidden = YES;
-            nextButton.hidden = YES;
-            previousButton.hidden = YES;
-            
-            nowPlayingInfoSong.textColor = [UIColor labelColor];
-            nowPlayingInfoArtist.textColor = [UIColor labelColor];
-            nowPlayingInfoAlbum.textColor = [UIColor labelColor];
-            playPauseButton.tintColor = [UIColor labelColor];
-            nextButton.tintColor = [UIColor labelColor];
-            previousButton.tintColor = [UIColor labelColor];
-        }
-  });
-}
-
-%new
-- (UIColor *)getAverageColorFrom:(UIImage *)image withAlpha:(double)alpha {
-      
-    CGSize size = {1, 1};
-      UIGraphicsBeginImageContext(size);
-      CGContextRef ctx = UIGraphicsGetCurrentContext();
-      CGContextSetInterpolationQuality(ctx, kCGInterpolationMedium);
-
-      [image drawInRect:(CGRect){.size = size} blendMode:kCGBlendModeCopy alpha:1];
-
-      uint8_t *data = (uint8_t *)CGBitmapContextGetData(ctx);
-
-      UIColor *color = [UIColor colorWithRed:data[2] / 255.0f
-                                   green:data[1] / 255.0f
-                                    blue:data[0] / 255.0f
-                                   alpha:alpha];
-
-      UIGraphicsEndImageContext();
-
-      return color;
-
-}
-
-%new
-- (UIColor *)lightDarkFromColor:(UIColor*)color {
-    size_t count = CGColorGetNumberOfComponents(color.CGColor);
-    const CGFloat *componentColors = CGColorGetComponents(color.CGColor);
-
-    CGFloat darknessScore = 0;
-    if (count == 2) {
-        darknessScore = (((componentColors[0]*255) * 299) + ((componentColors[0]*255) * 587) + ((componentColors[0]*255) * 114)) / 1000;
-    } else if (count == 4) {
-        darknessScore = (((componentColors[0]*255) * 299) + ((componentColors[1]*255) * 587) + ((componentColors[2]*255) * 114)) / 1000;
-    }
-
-    if (darknessScore >= 125) {
-        return [UIColor blackColor];
-    }
-
-    return [UIColor whiteColor];
+%hook SpringBoard
+- (void)applicationDidFinishLaunching:(UIApplication *)application {
+    %orig;
+    loadPreferences();
 }
 %end
 %end
@@ -638,16 +250,8 @@ UIButton *previousButton;
     }
     if (shouldLoad) {
 
-    preferences = [[HBPreferences alloc] initWithIdentifier:@"com.nahtedetihw.reachplayerprefs"];
-    [preferences registerBool:&enable default:NO forKey:@"enable"];
-    [preferences registerBool:&enableBlur default:NO forKey:@"enableBlur"];
-    [preferences registerBool:&enableTapToToggle default:NO forKey:@"enableTapToToggle"];
-    [preferences registerDouble:&chevronOpacity default:1.0 forKey:@"chevronOpacity"];
-    [preferences registerDouble:&keepAliveDuration default:8.0 forKey:@"keepAliveDuration"];
-    [preferences registerDouble:&positionX default:90.0 forKey:@"positionX"];
-    [preferences registerDouble:&positionY default:180.0 forKey:@"positionY"];
-    [preferences registerDouble:&artworkSize default:160.0 forKey:@"artworkSize"];
-    [preferences registerDouble:&reachOffset default:0.4 forKey:@"reachOffset"];
+        loadPreferences(); // Load prefs
+        CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), NULL, (CFNotificationCallback)loadPreferences, (CFStringRef)preferencesNotification, NULL, CFNotificationSuspensionBehaviorCoalesce);
     
     if (enable) {
     %init(ReachPlayer);

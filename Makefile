@@ -3,18 +3,16 @@ INSTALL_TARGET_PROCESSES = SpringBoard
 
 DEBUG=0
 FINALPACKAGE=1
+## THEOS_PACKAGE_SCHEME=rootless
 
-PREFIX=$(THEOS)/toolchain/Xcode.xctoolchain/usr/bin/
-
-SYSROOT=$(THEOS)/sdks/iphoneos14.0.sdk
+SYSROOT=$(THEOS)/sdks/iphoneos14.2.sdk
 
 include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = ReachPlayer
 
-ReachPlayer_FILES = Tweak.xm CBAutoScrollLabel.m
+ReachPlayer_FILES = Tweak.xm ReachPlayerContainerView.xm
 ReachPlayer_CFLAGS = -fobjc-arc
-ReachPlayer_EXTRA_FRAMEWORKS += Cephei
 ReachPlayer_PRIVATE_FRAMEWORKS = MediaRemote
 
 include $(THEOS_MAKE_PATH)/tweak.mk
