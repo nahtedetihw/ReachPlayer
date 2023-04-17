@@ -264,15 +264,9 @@ UIViewController *popController;
     
     AudioServicesPlaySystemSound(1519);
 
-    self.changelogController = [[OBWelcomeController alloc] initWithTitle:@"ReachPlayer" detailText:@"2.4" icon:[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"%@changelogControllerIcon.png", bundlePath]]];
+    self.changelogController = [[OBWelcomeController alloc] initWithTitle:@"ReachPlayer" detailText:@"2.5" icon:[UIImage imageWithContentsOfFile:[NSString stringWithFormat:@"%@changelogControllerIcon.png", bundlePath]]];
 
-    [self.changelogController addBulletedListItemWithTitle:@"Preferences" description:@"Rewrote the preferences to make it easier to find stuff." image:[UIImage systemImageNamed:@"1.circle.fill"]];
-    
-    [self.changelogController addBulletedListItemWithTitle:@"Activation" description:@"Added an option to activate by shaking the device." image:[UIImage systemImageNamed:@"2.circle.fill"]];
-    
-    [self.changelogController addBulletedListItemWithTitle:@"Background" description:@"Added more background blur styles." image:[UIImage systemImageNamed:@"3.circle.fill"]];
-    
-    [self.changelogController addBulletedListItemWithTitle:@"Timer" description:@"Fixed an issue with the timeout duration not working correctly." image:[UIImage systemImageNamed:@"4.circle.fill"]];
+    [self.changelogController addBulletedListItemWithTitle:@"Y Offset" description:@"Allows Y Offset to be changed right away and not need a respring." image:[UIImage systemImageNamed:@"1.circle.fill"]];
 
     self.changelogController.viewIfLoaded.backgroundColor = [UIColor systemBackgroundColor];
     for (OBBulletedListItem *item in self.changelogController.bulletedList.items) {

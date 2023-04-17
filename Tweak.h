@@ -79,6 +79,7 @@ static void loadPreferences() {
 -(void)toggleReachability;
 -(BOOL)reachabilityModeActive;
 -(void)deactivateReachability;
+-(void)_notifyObserversReachabilityYOffsetDidChange;
 @end
 
 @interface SBMediaController

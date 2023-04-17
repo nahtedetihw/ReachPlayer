@@ -57,6 +57,10 @@ ReachPlayerContainerView *containerView;
 %end
 
 %hook SBReachabilitySettings
+-(double)yOffsetFactor {
+    return reachOffset;
+}
+
 // Sets the vertical offset
 - (void)setYOffsetFactor:(double)arg1 {
     %orig(reachOffset);
@@ -185,6 +189,7 @@ ReachPlayerContainerView *containerView;
 %property (nonatomic, retain) NSTimer *updateTimer;
 -(void)viewWillAppear:(BOOL)arg1 {
     %orig;
+    [[%c(SBReachabilityManager) sharedInstance] _notifyObserversReachabilityYOffsetDidChange];
     [self addReachPlayerContainerView];
 }
 
