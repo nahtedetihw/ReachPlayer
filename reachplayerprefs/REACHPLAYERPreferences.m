@@ -6,6 +6,8 @@ static NSString *preferencesNotification = @"com.nahtedetihw.reachplayerprefs/Re
 
 #define bundlePath ([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/PreferenceBundles/reachplayerprefs.bundle/"] ? @"/Library/PreferenceBundles/reachplayerprefs.bundle/" : @"/var/jb/Library/PreferenceBundles/reachplayerprefs.bundle/")
 
+#define plistPath ([[NSFileManager defaultManager] fileExistsAtPath:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"] ? @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" : @"/var/jb/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist")
+
 UIBarButtonItem *changelogButtonItem;
 UIBarButtonItem *respringButtonItem;
 UIBarButtonItem *twitterButtonItem;
@@ -197,15 +199,15 @@ UIViewController *popController;
 
 -(id)readPreferenceValue: (PSSpecifier *)specifier {
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
-    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:plistPath]];
     return settings [specifier.properties[@"key"]] ?: specifier.properties[@"default"];
 }
 
 -(void)setPreferenceValue:(id)value specifier: (PSSpecifier *)specifier {
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
-    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile:plistPath]];
     [settings setObject:value forKey:specifier.properties [@"key"]];
-    [settings writeToFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" atomically:YES];
+    [settings writeToFile:plistPath atomically:YES];
     [super setPreferenceValue:value specifier :specifier];
     
     CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)preferencesNotification, NULL, NULL, TRUE);
@@ -329,15 +331,15 @@ UIViewController *popController;
 
 -(id)readPreferenceValue: (PSSpecifier *)specifier {
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
-    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:plistPath]];
     return settings [specifier.properties[@"key"]] ?: specifier.properties[@"default"];
 }
 
 -(void)setPreferenceValue:(id)value specifier: (PSSpecifier *)specifier {
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
-    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: plistPath]];
     [settings setObject:value forKey:specifier.properties [@"key"]];
-    [settings writeToFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" atomically:YES];
+    [settings writeToFile:plistPath atomically:YES];
     [super setPreferenceValue:value specifier :specifier];
     
     CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)preferencesNotification, NULL, NULL, TRUE);
@@ -360,15 +362,15 @@ UIViewController *popController;
 
 -(id)readPreferenceValue: (PSSpecifier *)specifier {
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
-    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:plistPath]];
     return settings [specifier.properties[@"key"]] ?: specifier.properties[@"default"];
 }
 
 -(void)setPreferenceValue:(id)value specifier: (PSSpecifier *)specifier {
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
-    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: plistPath]];
     [settings setObject:value forKey:specifier.properties [@"key"]];
-    [settings writeToFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" atomically:YES];
+    [settings writeToFile:plistPath atomically:YES];
     [super setPreferenceValue:value specifier :specifier];
     
     CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)preferencesNotification, NULL, NULL, TRUE);
@@ -390,15 +392,15 @@ UIViewController *popController;
 
 -(id)readPreferenceValue: (PSSpecifier *)specifier {
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
-    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:plistPath]];
     return settings [specifier.properties[@"key"]] ?: specifier.properties[@"default"];
 }
 
 -(void)setPreferenceValue:(id)value specifier: (PSSpecifier *)specifier {
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
-    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: plistPath]];
     [settings setObject:value forKey:specifier.properties [@"key"]];
-    [settings writeToFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" atomically:YES];
+    [settings writeToFile:plistPath atomically:YES];
     [super setPreferenceValue:value specifier :specifier];
     
     CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)preferencesNotification, NULL, NULL, TRUE);
@@ -420,15 +422,15 @@ UIViewController *popController;
 
 -(id)readPreferenceValue: (PSSpecifier *)specifier {
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
-    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings addEntriesFromDictionary:[NSDictionary dictionaryWithContentsOfFile:plistPath]];
     return settings [specifier.properties[@"key"]] ?: specifier.properties[@"default"];
 }
 
 -(void)setPreferenceValue:(id)value specifier: (PSSpecifier *)specifier {
     NSMutableDictionary *settings = [NSMutableDictionary dictionary];
-    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"]];
+    [settings addEntriesFromDictionary: [NSDictionary dictionaryWithContentsOfFile: plistPath]];
     [settings setObject:value forKey:specifier.properties [@"key"]];
-    [settings writeToFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" atomically:YES];
+    [settings writeToFile:plistPath atomically:YES];
     [super setPreferenceValue:value specifier :specifier];
     
     CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), (CFStringRef)preferencesNotification, NULL, NULL, TRUE);

@@ -1,5 +1,7 @@
 #import <UIKit/UIKit.h>
 
+#define plistPath ([[NSFileManager defaultManager] fileExistsAtPath:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"] ? @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" : @"/var/jb/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist")
+
 static NSString *preferencesNotification = @"com.nahtedetihw.reachplayerprefs/ReloadPrefs";
 
 BOOL enable, enableBlur;
@@ -7,7 +9,7 @@ double chevronOpacity, keepAliveDuration, positionX, positionY, artworkSize, rea
 NSInteger layoutStyle, blurStyle, activationStyle;
 
 static void loadPreferences() {
-    NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"];
+    NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:plistPath];
     
     enable = dict[@"enable"] ? [dict[@"enable"] boolValue] : NO;
     enableBlur = dict[@"enableBlur"] ? [dict[@"enableBlur"] boolValue] : NO;

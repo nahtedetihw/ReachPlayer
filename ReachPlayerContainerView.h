@@ -6,11 +6,13 @@ static NSString *preferencesNotification = @"com.nahtedetihw.reachplayerprefs/Re
 
 #define bundlePath ([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/PreferenceBundles/reachplayerprefs.bundle/"] ? @"/Library/PreferenceBundles/reachplayerprefs.bundle/" : @"/var/jb/Library/PreferenceBundles/reachplayerprefs.bundle/")
 
+#define plistPath ([[NSFileManager defaultManager] fileExistsAtPath:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"] ? @"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist" : @"/var/jb/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist")
+
 double positionXRP, positionYRP, artworkSizeRP, reachOffsetRP;
 NSInteger layoutStyleRP, blurStyleRP;
 
 static void loadPreferences() {
-    NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:@"/var/mobile/Library/Preferences/com.nahtedetihw.reachplayerprefs.plist"];
+    NSDictionary *dict = [NSDictionary dictionaryWithContentsOfFile:plistPath];
     
     positionXRP = dict[@"positionX"] ? [dict[@"positionX"] doubleValue] : 0;
     positionYRP = dict[@"positionY"] ? [dict[@"positionY"] doubleValue] : 0;
